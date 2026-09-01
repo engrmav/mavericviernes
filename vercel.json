@@ -1,5 +1,0 @@
-{
-  "rewrites": [
-    { "source": "/project/:slug", "destination": "/Projects.html" }
-  ]
-}
