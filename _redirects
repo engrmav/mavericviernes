@@ -1,0 +1,9 @@
+# Serve All_projects.html at the clean URL /all-projects (rewrite, not redirect,
+# so the URL bar keeps showing /all-projects).
+/all-projects   /All_projects.html   200
+
+# Serve Projects.html (the shared project-detail template) for any
+# /project/<slug> URL - direct visits and refreshes included.
+/project/*      /Projects.html       200
+
+# "/" already serves index.html by default on Netlify - no rule needed.

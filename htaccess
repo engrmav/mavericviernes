@@ -1,0 +1,10 @@
+RewriteEngine On
+
+# Serve All_projects.html at the clean URL /all-projects
+RewriteRule ^all-projects/?$ /All_projects.html [L]
+
+# Serve Projects.html (the shared project-detail template) for any
+# /project/<slug> URL - direct visits and refreshes included.
+RewriteRule ^project/[^/]+/?$ /Projects.html [L]
+
+# "/" already serves index.html via Apache's DirectoryIndex default - no rule needed.
