@@ -1,0 +1,6 @@
+RewriteEngine On
+
+# Serve All_projects.html at the clean URL /all-projects
+RewriteRule ^all-projects/?$ /All_projects.html [L]
+
+# "/" already serves index.html via Apache's DirectoryIndex default - no rule needed.
