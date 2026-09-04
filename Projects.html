@@ -325,15 +325,19 @@
     background-image:repeating-linear-gradient(115deg, rgba(236,230,217,0.05) 0px, rgba(236,230,217,0.05) 1px, transparent 1px, transparent 34px);
     opacity:0.6;
   }
-  #detail-hero .hero-icon{
-    position:absolute;
-    right:clamp(-4rem,4vw,4rem);
-    top:50%;
-    transform:translateY(-50%);
-    width:clamp(280px,34vw,460px);
-    height:clamp(280px,34vw,460px);
-    color:var(--bone);
-    opacity:0.14;
+  /* Fine film-grain noise layered on top of the gold header gradient
+     (set inline via HERO_BG in the script below), giving the header a
+     textured, photographic feel in the same mood as the yellow-themed
+     reference photo — generated entirely with an SVG feTurbulence
+     filter, not the reference image itself. Same layer on every
+     project, so the texture reads consistently across all headers. */
+  #detail-hero .hero-bg::after{
+    content:'';
+    position:absolute;inset:0;
+    background-image:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='180' height='180'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='2' stitchTiles='stitch'/><feColorMatrix type='saturate' values='0'/></filter><rect width='100%25' height='100%25' filter='url(%23n)'/></svg>");
+    background-repeat:repeat;
+    mix-blend-mode:overlay;
+    opacity:0.35;
     pointer-events:none;
   }
   #detail-hero .hero-scrim{
@@ -944,7 +948,6 @@
   <!-- HERO -->
   <div id="detail-hero">
     <div class="hero-bg" id="heroBg"></div>
-    <svg class="hero-icon" id="heroIcon" viewBox="0 0 64 64" fill="none" xmlns="http://www.w3.org/2000/svg"></svg>
     <div class="hero-scrim"></div>
     <a href="/All_projects.html" class="hero-back">
       <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M19 12H5M11 6l-6 6 6 6" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>
@@ -1086,27 +1089,14 @@
     };
   })();
 
-  var ICONS = {
-    'fitness-gym-automation':'<rect x="10" y="10" width="12" height="12" rx="2" stroke="currentColor" stroke-width="1.4"/><rect x="42" y="10" width="12" height="12" rx="2" stroke="currentColor" stroke-width="1.4"/><rect x="10" y="42" width="12" height="12" rx="2" stroke="currentColor" stroke-width="1.4"/><rect x="42" y="42" width="12" height="12" rx="2" stroke="currentColor" stroke-width="1.4"/><path d="M32 16h0M16 32h0M48 32h0M32 48h0" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/>',
-    'smartserve-ai-agent':'<rect x="9" y="14" width="46" height="30" rx="7" stroke="currentColor" stroke-width="1.4"/><path d="M22 44l-3 9 11-9" stroke="currentColor" stroke-width="1.4" stroke-linejoin="round"/><circle cx="24" cy="29" r="2.4" fill="currentColor"/><circle cx="32" cy="29" r="2.4" fill="currentColor"/><circle cx="40" cy="29" r="2.4" fill="currentColor"/>',
-    'healthfacts-content-automation':'<rect x="10" y="12" width="44" height="32" rx="4" stroke="currentColor" stroke-width="1.4"/><circle cx="21" cy="23" r="4" stroke="currentColor" stroke-width="1.4"/><path d="M12 40l12-11 9 8 8-7 11 10" stroke="currentColor" stroke-width="1.4" stroke-linejoin="round"/><path d="M18 50h28" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/>',
-    'leadtrack-crm':'<path d="M10 12h44l-16 20v16l-12 6V32z" stroke="currentColor" stroke-width="1.4" stroke-linejoin="round"/>',
-    'courseflow-enrollment':'<path d="M32 12L8 22l24 10 24-10-24-10z" stroke="currentColor" stroke-width="1.4" stroke-linejoin="round"/><path d="M18 27v13c0 3 6.3 6 14 6s14-3 14-6V27" stroke="currentColor" stroke-width="1.4"/><path d="M52 24v14" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/>'
-  };
-
-  // Every project title header shares the exact same background image
-  // (title-header-bg.png, placed alongside this HTML file). Card layout,
-  // heights, gallery images, descriptions, and animations are untouched —
-  // only the hero background source changed, from a per-project gradient
-  // to this single shared image.
-  var TITLE_HEADER_BG = "url('title-header-bg.png')";
-  var BG = {
-    'fitness-gym-automation':TITLE_HEADER_BG,
-    'smartserve-ai-agent':TITLE_HEADER_BG,
-    'healthfacts-content-automation':TITLE_HEADER_BG,
-    'leadtrack-crm':TITLE_HEADER_BG,
-    'courseflow-enrollment':TITLE_HEADER_BG
-  };
+  // A single, consistent yellow/gold-themed header background — inspired
+  // by (but not a copy of) a grainy gold-to-black reference photo, staying
+  // within the site's existing black/gold/bone palette. The same value is
+  // used for every project (see render() below) so every title header
+  // shares one look; the fine grain on top comes from the .hero-bg::after
+  // SVG-noise layer defined in CSS. The old per-project ICONS graphics
+  // that used to sit in this header have been removed entirely.
+  var HERO_BG = 'radial-gradient(ellipse 120% 90% at 15% 8%, rgba(212,160,23,0.85) 0%, rgba(170,130,25,0.5) 22%, rgba(90,70,20,0.32) 42%, rgba(30,26,12,0.14) 62%, transparent 78%), linear-gradient(150deg, #1a1608 0%, #0c0d0e 68%)';
 
   // Gallery slides per project — placeholders standing in for real
   // screenshots/photos. Swap any 'bg' value for a real image URL
@@ -1299,8 +1289,7 @@
     var data = PROJECTS[p];
 
     document.title = data.title + ' — Maveric Viernes';
-    document.getElementById('heroBg').style.backgroundImage = BG[p];
-    document.getElementById('heroIcon').innerHTML = ICONS[p];
+    document.getElementById('heroBg').style.backgroundImage = HERO_BG;
     document.getElementById('heroTitle').textContent = data.title;
     document.getElementById('heroTag').textContent = data.tag;
 
