@@ -1094,14 +1094,18 @@
     'courseflow-enrollment':'<path d="M32 12L8 22l24 10 24-10-24-10z" stroke="currentColor" stroke-width="1.4" stroke-linejoin="round"/><path d="M18 27v13c0 3 6.3 6 14 6s14-3 14-6V27" stroke="currentColor" stroke-width="1.4"/><path d="M52 24v14" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/>'
   };
 
-  // Gradient placeholders standing in for a real hero photo per project —
-  // swap #heroBg's background-image for an actual image URL any time.
+  // Every project title header shares the exact same background image
+  // (title-header-bg.png, placed alongside this HTML file). Card layout,
+  // heights, gallery images, descriptions, and animations are untouched —
+  // only the hero background source changed, from a per-project gradient
+  // to this single shared image.
+  var TITLE_HEADER_BG = "url('title-header-bg.png')";
   var BG = {
-    'fitness-gym-automation':'radial-gradient(circle at 22% 30%, rgba(201,162,39,0.22), transparent 55%), linear-gradient(135deg, #17140a 0%, #0c0d0e 60%)',
-    'smartserve-ai-agent':'radial-gradient(circle at 78% 25%, rgba(201,162,39,0.18), transparent 55%), linear-gradient(135deg, #0c0d0e 0%, #14161a 70%)',
-    'healthfacts-content-automation':'radial-gradient(circle at 30% 70%, rgba(201,162,39,0.2), transparent 55%), linear-gradient(135deg, #0c0d0e 0%, #17140f 70%)',
-    'leadtrack-crm':'radial-gradient(circle at 70% 65%, rgba(201,162,39,0.2), transparent 55%), linear-gradient(135deg, #0c0d0e 0%, #12140d 70%)',
-    'courseflow-enrollment':'radial-gradient(circle at 25% 65%, rgba(201,162,39,0.18), transparent 55%), linear-gradient(135deg, #0c0d0e 0%, #14120a 70%)'
+    'fitness-gym-automation':TITLE_HEADER_BG,
+    'smartserve-ai-agent':TITLE_HEADER_BG,
+    'healthfacts-content-automation':TITLE_HEADER_BG,
+    'leadtrack-crm':TITLE_HEADER_BG,
+    'courseflow-enrollment':TITLE_HEADER_BG
   };
 
   // Gallery slides per project — placeholders standing in for real
