@@ -378,10 +378,16 @@
     color:var(--bone);
     text-shadow:0 2px 24px rgba(0,0,0,0.35);
   }
+  .hero-detail-tags{
+    display:flex;
+    flex-wrap:wrap;
+    align-items:center;
+    gap:0.55rem;
+    margin-top:1.1rem;
+  }
   .hero-detail-tag{
     display:inline-flex;
     align-items:center;
-    margin-top:1.1rem;
     padding:0.5rem 1.1rem;
     border:1px solid rgba(255,255,255,0.18);
     border-radius:999px;
@@ -970,7 +976,7 @@
     </a>
     <div class="hero-detail-content">
       <h1 class="hero-detail-title" id="heroTitle">Project</h1>
-      <span class="hero-detail-tag" id="heroTag">—</span>
+      <div class="hero-detail-tags" id="heroTag"></div>
     </div>
   </div>
 
@@ -1150,7 +1156,7 @@
 
   var PROJECTS = {
     'fitness-gym-automation':{
-      order:1, index:'01', tag:'N8N · GOOGLE SHEETS · QR CODES · WEBHOOKS · AI AGENTS · GMAIL', title:'Fitness Gym Management Automation',
+      order:1, index:'01', tag:['N8N','GOOGLE SHEETS','QR CODES','WEBHOOKS','AI AGENTS','GMAIL'], title:'Fitness Gym Management Automation',
       category:'Automation', year:'2026',
       overview:['The gym was relying on manual registration, attendance logs, and membership tracking, making it difficult to monitor active members and expiration dates. We built an automated gym management system that centralizes member data and handles registration, QR-based check-ins, attendance, and membership monitoring.'],
       challenge:['Member information and attendance records were previously managed manually, making it time-consuming to track daily visits, membership status, and expiration dates.','The lack of automated notifications also meant that expiring memberships could easily be missed, requiring staff to manually check records and contact members.'],
@@ -1168,7 +1174,7 @@
       stack:['n8n','Google Sheets','Webhooks','QR Codes','Google Gemini','OpenAI','Gmail','AI Agents']
     },
     'smartserve-ai-agent':{
-      order:0, index:'02', tag:'N8N · GOOGLE GEMINI · FACEBOOK MESSENGER · RAG · GOOGLE DOCS', title:'SmartServe – AI Service Agent',
+      order:0, index:'02', tag:['N8N','GOOGLE GEMINI','FACEBOOK MESSENGER','RAG','GOOGLE DOCS'], title:'SmartServe – AI Service Agent',
       category:'AI & Automation', year:'2026',
       overview:['Customer inquiries were being handled manually, requiring repetitive responses to common questions about products, pricing, delivery, and ordering. We built an AI-powered customer service agent that automatically understands incoming Messenger conversations and retrieves relevant information from a centralized knowledge base.'],
       challenge:['Customers frequently asked similar questions about products, prices, delivery options, and ordering procedures.','Manually answering every inquiry consumed time and created the risk of inconsistent or incomplete responses, especially when information changed.'],
@@ -1186,7 +1192,7 @@
       stack:['n8n','Google Gemini','Facebook Messenger','RAG','Google Docs','AI Agents']
     },
     'healthfacts-content-automation':{
-      order:3, index:'03', tag:'N8N · AI CHAT MODEL · AI AGENTS · GOOGLE SHEETS · IMAGE APIs', title:'HealthFacts – Facebook Content Automation',
+      order:3, index:'03', tag:['N8N','AI CHAT MODEL','AI AGENTS','GOOGLE SHEETS','IMAGE APIs'], title:'HealthFacts – Facebook Content Automation',
       category:'AI & Automation', year:'2026',
       overview:['Creating health-related social media content manually was repetitive and time-consuming. We built an AI-powered content automation workflow that generates unique health facts, captions, keywords, and relevant images while maintaining a record of previously generated content.'],
       challenge:['Creating multiple pieces of health content required manually researching topics, writing captions, finding suitable images, and checking whether similar content had already been created.','This made consistent content production difficult and increased repetitive work.'],
@@ -1204,7 +1210,7 @@
       stack:['n8n','AI Chat Model','AI Agents','Google Sheets','Image APIs','Facebook']
     },
     'leadtrack-crm':{
-      order:2, index:'04', tag:'ZAPIER · AI · GMAIL · HUBSPOT · SLACK', title:'LeadTrack – Lead Qualification CRM',
+      order:2, index:'04', tag:['ZAPIER','AI','GMAIL','HUBSPOT','SLACK'], title:'LeadTrack – Lead Qualification CRM',
       category:'Automation', year:'2026',
       overview:['Sales teams were spending time manually reviewing incoming leads and deciding which prospects deserved immediate attention. We built an automated qualification system that captures, scores, routes, and synchronizes leads across the sales stack.'],
       challenge:['Leads entered the sales process through email and other sources, requiring manual review before they could be categorized and assigned.','Without automated qualification, high-value prospects could wait alongside lower-priority leads, slowing down the sales process.'],
@@ -1222,7 +1228,7 @@
       stack:['Zapier','AI','Gmail','HubSpot','Slack','CRM Automation']
     },
     'courseflow-enrollment':{
-      order:4, index:'05', tag:'ZAPIER · JOTFORM · SYSTEME.IO · BREVO', title:'CourseFlow – Automated Enrollment System',
+      order:4, index:'05', tag:['ZAPIER','JOTFORM','SYSTEME.IO','BREVO'], title:'CourseFlow – Automated Enrollment System',
       category:'Automation', year:'2026',
       overview:['Course enrollment and student onboarding required manual data entry across multiple platforms. We built an automated workflow that captures applications, enrolls students, updates contact lists, and triggers onboarding communications automatically.'],
       challenge:['Student registration information had to be transferred manually between the registration form, course platform, and email marketing system.','This created unnecessary administrative work and increased the possibility of delays or incorrect student information.'],
@@ -1305,7 +1311,9 @@
     document.title = data.title + ' — Maveric Viernes';
     document.getElementById('heroBg').style.backgroundImage = HERO_BG;
     document.getElementById('heroTitle').textContent = data.title;
-    document.getElementById('heroTag').textContent = data.tag;
+    document.getElementById('heroTag').innerHTML = data.tag.map(function(t){
+      return '<span class="hero-detail-tag">'+esc(t)+'</span>';
+    }).join('');
 
     document.getElementById('overviewCopy').innerHTML = data.overview.map(function(t){return '<p>'+esc(t)+'</p>';}).join('');
     document.getElementById('challengeCopy').innerHTML = data.challenge.map(function(t){return '<p>'+esc(t)+'</p>';}).join('');
