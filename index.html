@@ -1615,7 +1615,7 @@
        text just enough on narrow phones instead of letting it wrap. It's
        sized clearly larger than the supporting sentence underneath,
        matching desktop's hierarchy (big index title, smaller message). */
-    #toolstack .projects-index{white-space:nowrap;font-size:clamp(1.3rem,6.5vw,1.8rem);}
+    #toolstack .projects-index{white-space:nowrap;font-size:clamp(1.5rem,7.6vw,3.4rem);}
     #toolstack .projects-heading{font-size:0.82rem;line-height:1.45;max-width:88vw;margin-left:auto;margin-right:auto;}
   }
 
@@ -1971,17 +1971,27 @@
        spacing) so image/title/description/pills/View Case all get
        comfortable room, without making the card excessively tall. */
     /* Give every mobile card EXACTLY the same overall height as the
-       FIRST project card. The base .card-body rule uses `flex:1`, which
-       sets flex-basis:0% and was silently overriding any fixed height
-       here — that's why cards stayed misaligned even with a height set.
-       Pinning flex to `0 0 15.5rem` alongside height:15.5rem stops it
-       from growing/shrinking with content, so card-body is truly locked
-       to card 1's natural content height on every card. card-visual
-       stays fluid via aspect-ratio and already matches across all
-       cards. overflow:hidden clips any card whose content runs longer
-       than card 1's instead of letting it push that card taller.
-       Content, image sizes, and typography are unchanged. */
-    .card-body{padding:1.1rem 1.2rem 1.3rem;flex:0 0 15.5rem;height:15.5rem;overflow:hidden;}
+       FIRST project card (SmartServe). The base .card-body rule uses
+       `flex:1`, which sets flex-basis:0% and would silently override
+       any fixed height here — flex:0 0 auto stops it from
+       growing/shrinking with content so a JS-measured height (see
+       equalizeMobileProjectCards() near the closing </body>) actually
+       sticks. That script measures card 1's own natural content height
+       (image + title + description + pills + View Case, unchanged) and
+       applies it to every card's .card-body as an inline style, so
+       every card bottom lands on the exact same line. Shorter cards
+       simply end up with blank space after their content — the pills
+       row already uses margin-top:auto, so that space appears right
+       after the description, pushing pills/View Case down to match
+       card 1, with no description text touched. A hardcoded rem value
+       was tried here before and clipped content (card 1's own natural
+       height is taller than a flat 15.5rem once real fonts/pill-wrap
+       are accounted for) — the JS measurement avoids guessing. No
+       overflow:hidden here: since card 1 IS the tallest card by
+       content, no other card should ever need clipping; height is set
+       with a small JS safety margin instead. Content, image sizes, and
+       typography are unchanged. */
+    .card-body{padding:1.1rem 1.2rem 1.3rem;flex:0 0 auto;}
     .card-top-row{margin-bottom:0.5rem;}
     .proj-title{font-size:1rem;margin-bottom:0.45rem;}
     .proj-desc{
@@ -3063,6 +3073,59 @@
   });
 
   updateNavVisibility();
+
+  // ---- Mobile Projects cards: equal heights, card 1 (SmartServe) as
+  // the reference ----
+  // Mobile only (matches the same 760px breakpoint the Projects CSS
+  // uses). Measures card 1's own natural content height (image height
+  // comes from aspect-ratio and is unaffected by this; only the text
+  // column — title/description/pills/View Case — varies), then applies
+  // that exact height to every card's .card-body via inline style. The
+  // base CSS already gives .card-body flex:0 0 auto and .proj-pills
+  // margin-top:auto, so on cards shorter than card 1 this extra height
+  // shows up as blank space pushing the pills/View Case row down to
+  // line up with card 1 — description text itself is never touched or
+  // clipped. Re-runs on load, once web fonts finish swapping in (font
+  // metrics change text wrap → natural height), and on resize/rotation
+  // so it stays correct if the viewport crosses the mobile breakpoint.
+  (function initEqualizeMobileProjectCards(){
+    var cardBodies = Array.prototype.slice.call(
+      document.querySelectorAll('#projectsTrack .project-card .card-body')
+    );
+    if(!cardBodies.length) return;
+    var mobileMql = window.matchMedia('(max-width:760px)');
+
+    function run(){
+      if(!mobileMql.matches){
+        // Desktop/tablet: remove any inline height so the untouched
+        // desktop CSS (flex:1, align-items:stretch) drives sizing.
+        cardBodies.forEach(function(el){ el.style.height = ''; });
+        return;
+      }
+      // Reset first so this measurement reflects card 1's real natural
+      // height, not a stale inline height from a previous run.
+      cardBodies.forEach(function(el){ el.style.height = 'auto'; });
+      var refHeight = cardBodies[0].getBoundingClientRect().height;
+      if(refHeight <= 0) return;
+      cardBodies.forEach(function(el){ el.style.height = refHeight + 'px'; });
+    }
+
+    run();
+    window.addEventListener('load', run);
+    if(document.fonts && document.fonts.ready){
+      document.fonts.ready.then(run);
+    }
+    var resizeT;
+    window.addEventListener('resize', function(){
+      clearTimeout(resizeT);
+      resizeT = setTimeout(run, 120);
+    });
+    if(mobileMql.addEventListener){
+      mobileMql.addEventListener('change', run);
+    } else if(mobileMql.addListener){
+      mobileMql.addListener(run);
+    }
+  })();
 
   // ---- Footer "back to top" button ----
   (function initFooterToTop(){
