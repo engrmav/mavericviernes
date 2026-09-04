@@ -1971,15 +1971,17 @@
        spacing) so image/title/description/pills/View Case all get
        comfortable room, without making the card excessively tall. */
     /* Give every mobile card EXACTLY the same overall height as the
-       FIRST project card (fixed height, not min-height, so all cards
-       match card 1 precisely regardless of their own copy length).
-       card-visual's height already stays fluid via aspect-ratio and
-       matches across all cards; card-body is fixed to card 1's natural
-       content height. overflow:hidden keeps any card whose content runs
-       longer than card 1's from pushing the card taller, so every card
-       stays visually identical in height to the first. Content, image
-       sizes, and typography are unchanged. */
-    .card-body{padding:1.1rem 1.2rem 1.3rem;height:15.5rem;overflow:hidden;}
+       FIRST project card. The base .card-body rule uses `flex:1`, which
+       sets flex-basis:0% and was silently overriding any fixed height
+       here — that's why cards stayed misaligned even with a height set.
+       Pinning flex to `0 0 15.5rem` alongside height:15.5rem stops it
+       from growing/shrinking with content, so card-body is truly locked
+       to card 1's natural content height on every card. card-visual
+       stays fluid via aspect-ratio and already matches across all
+       cards. overflow:hidden clips any card whose content runs longer
+       than card 1's instead of letting it push that card taller.
+       Content, image sizes, and typography are unchanged. */
+    .card-body{padding:1.1rem 1.2rem 1.3rem;flex:0 0 15.5rem;height:15.5rem;overflow:hidden;}
     .card-top-row{margin-bottom:0.5rem;}
     .proj-title{font-size:1rem;margin-bottom:0.45rem;}
     .proj-desc{
