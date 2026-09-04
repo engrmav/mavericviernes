@@ -319,25 +319,33 @@
     background-size:cover;
     background-position:center;
   }
+  /* Soft black abstract shadow forms blended into the yellow base below
+     (set inline via HERO_BG in the script). mix-blend-mode:multiply means
+     these are pure alpha-fades with no hard edges, so they read as
+     shadow/depth sitting IN the yellow surface rather than separate
+     shapes stacked on top of it. Same layer on every project, so every
+     title header shares the same treatment. No white lines/icons here
+     anymore — this replaces that old layer entirely. */
   #detail-hero .hero-bg::before{
     content:'';
     position:absolute;inset:0;
-    background-image:repeating-linear-gradient(115deg, rgba(236,230,217,0.05) 0px, rgba(236,230,217,0.05) 1px, transparent 1px, transparent 34px);
-    opacity:0.6;
+    background-image:
+      radial-gradient(ellipse 58% 62% at 82% 12%, rgba(8,7,3,0.62) 0%, rgba(8,7,3,0.32) 38%, transparent 72%),
+      radial-gradient(ellipse 50% 55% at 8% 90%, rgba(6,5,2,0.55) 0%, rgba(6,5,2,0.26) 40%, transparent 74%),
+      radial-gradient(ellipse 65% 48% at 55% 68%, rgba(10,8,3,0.32) 0%, transparent 70%);
+    mix-blend-mode:multiply;
   }
-  /* Fine film-grain noise layered on top of the gold header gradient
-     (set inline via HERO_BG in the script below), giving the header a
-     textured, photographic feel in the same mood as the yellow-themed
-     reference photo — generated entirely with an SVG feTurbulence
-     filter, not the reference image itself. Same layer on every
-     project, so the texture reads consistently across all headers. */
+  /* Refined, low-key grain — enough to feel like a tactile printed/paper
+     surface (matching the reference photo's mood) without reading as
+     noisy. Pure SVG feTurbulence, generated in code, not the reference
+     image. */
   #detail-hero .hero-bg::after{
     content:'';
     position:absolute;inset:0;
-    background-image:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='180' height='180'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='2' stitchTiles='stitch'/><feColorMatrix type='saturate' values='0'/></filter><rect width='100%25' height='100%25' filter='url(%23n)'/></svg>");
+    background-image:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='220' height='220'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='1.05' numOctaves='2' stitchTiles='stitch'/><feColorMatrix type='saturate' values='0'/></filter><rect width='100%25' height='100%25' filter='url(%23n)'/></svg>");
     background-repeat:repeat;
     mix-blend-mode:overlay;
-    opacity:0.35;
+    opacity:0.16;
     pointer-events:none;
   }
   #detail-hero .hero-scrim{
@@ -1089,14 +1097,13 @@
     };
   })();
 
-  // A single, consistent yellow/gold-themed header background — inspired
-  // by (but not a copy of) a grainy gold-to-black reference photo, staying
-  // within the site's existing black/gold/bone palette. The same value is
-  // used for every project (see render() below) so every title header
-  // shares one look; the fine grain on top comes from the .hero-bg::after
-  // SVG-noise layer defined in CSS. The old per-project ICONS graphics
-  // that used to sit in this header have been removed entirely.
-  var HERO_BG = 'radial-gradient(ellipse 120% 90% at 15% 8%, rgba(212,160,23,0.85) 0%, rgba(170,130,25,0.5) 22%, rgba(90,70,20,0.32) 42%, rgba(30,26,12,0.14) 62%, transparent 78%), linear-gradient(150deg, #1a1608 0%, #0c0d0e 68%)';
+  // A single, yellow-dominant header background used for every project so
+  // every title header shares the same look. Black abstract shadow forms
+  // and grain are layered on top via the .hero-bg::before/::after CSS
+  // rules above; this is just the yellow base tone itself. Inspired by
+  // the reference photo's warm gold mood, built from scratch in CSS —
+  // not the reference image itself.
+  var HERO_BG = 'linear-gradient(150deg, #e3ad19 0%, #cf9f1f 42%, #b78a17 72%, #a5790f 100%)';
 
   // Gallery slides per project — placeholders standing in for real
   // screenshots/photos. Swap any 'bg' value for a real image URL
