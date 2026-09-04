@@ -679,8 +679,8 @@
   /* ---------- TECH STACK — larger, playing-card-scale tiles: big
      colored brand logo up top, tool name clearly readable below ---------- */
   .stack-grid{
-    display:flex;
-    flex-wrap:wrap;
+    display:grid;
+    grid-template-columns:repeat(6, 1fr);
     gap:1.4rem;
     margin-top:1.8rem;
   }
@@ -690,7 +690,7 @@
     align-items:center;
     justify-content:center;
     gap:1.4rem;
-    width:180px;
+    width:100%;
     height:220px;
     padding:2.2rem 1.4rem;
     border:1px solid var(--line);
@@ -736,7 +736,8 @@
     color:#111111;
   }
   @media (max-width:640px){
-    .stack-card{width:150px;height:190px;padding:1.8rem 1.1rem;gap:1.1rem;}
+    .stack-grid{grid-template-columns:repeat(2, 1fr);}
+    .stack-card{width:100%;height:190px;padding:1.8rem 1.1rem;gap:1.1rem;}
     .stack-card-logo{width:74px;height:74px;}
   }
 
