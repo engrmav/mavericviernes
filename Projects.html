@@ -451,27 +451,32 @@
      project title) removed per request — no longer rendered on any
      project. */
   /* Yellow oval badge below the title — "<category> • <year>" per
-     project (e.g. "BUSINESS AUTOMATION • 2026"). Transparent fill,
-     yellow outline and text, with a small centered dot separating
-     the category label from the year. Case preserved exactly as
-     authored per project rather than forced via text-transform. */
+     project (e.g. "BUSINESS AUTOMATION • 2026"), with a small
+     centered dot separating the label from the year. Deliberately
+     mirrors the .hero-back ("All Projects") pill's shape and format
+     — same padding, border style, translucent blurred background,
+     letter-spacing — just recolored yellow and set in Clash Display
+     instead of the mono font. Case preserved exactly as authored
+     per project rather than forced via text-transform. */
   .hero-year-badge{
     display:inline-flex;
     align-items:center;
     justify-content:center;
-    gap:0.55em;
+    gap:0.5rem;
     white-space:nowrap;
     line-height:1;
     margin-top:1.1rem;
-    padding:0.5rem 1.2rem;
+    padding:0.55rem 1.1rem;
     border-radius:999px;
-    background:transparent;
-    border:1.5px solid var(--dash-yellow);
-    color:var(--dash-yellow);
-    font-family:var(--ff-mono);
-    font-weight:700;
+    border:1px solid rgba(240,196,25,0.4);
+    background:rgba(12,13,14,0.45);
+    -webkit-backdrop-filter:blur(10px);
+    backdrop-filter:blur(10px);
+    font-family:var(--ff-display);
+    font-weight:400;
     font-size:0.72rem;
-    letter-spacing:0.12em;
+    letter-spacing:0.1em;
+    color:var(--dash-yellow);
   }
   .hero-year-badge .hero-badge-dot{
     flex:none;
