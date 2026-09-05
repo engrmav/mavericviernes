@@ -360,6 +360,24 @@
     background:linear-gradient(180deg, rgba(12,13,14,0.05) 0%, rgba(12,13,14,0.15) 40%, rgba(12,13,14,0.92) 100%),
                linear-gradient(90deg, rgba(12,13,14,0.55) 0%, rgba(12,13,14,0.05) 55%);
   }
+  /* Centered logo graphic layered on top of the hero background (and its
+     shadow/grain/scrim layers) but underneath the title text. Same on
+     every project header, in both Dark and Light mode — this sits inside
+     #detail-hero, which already keeps its dark-mode look regardless of
+     theme, so no separate light-mode variant is needed here. */
+  #detail-hero .hero-logo-overlay{
+    position:absolute;
+    top:50%;left:50%;
+    transform:translate(-50%,-50%);
+    z-index:1;
+    width:clamp(200px, 24vw, 400px);
+    pointer-events:none;
+  }
+  #detail-hero .hero-logo-overlay img{
+    display:block;
+    width:100%;
+    height:auto;
+  }
   .hero-detail-content{
     position:relative;
     z-index:2;
@@ -971,6 +989,9 @@
   <div id="detail-hero">
     <div class="hero-bg" id="heroBg"></div>
     <div class="hero-scrim"></div>
+    <div class="hero-logo-overlay">
+      <img src="/image-projects/n8n-logo-transparent.png" alt="" />
+    </div>
     <a href="/All_projects.html" class="hero-back">
       <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M19 12H5M11 6l-6 6 6 6" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>
       <span>All Projects</span>
