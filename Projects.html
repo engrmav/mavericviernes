@@ -447,28 +447,9 @@
     color:var(--bone);
     text-shadow:0 2px 24px rgba(0,0,0,0.35);
   }
-  .hero-detail-tags{
-    display:flex;
-    flex-wrap:wrap;
-    align-items:center;
-    gap:0.55rem;
-    margin-top:1.1rem;
-  }
-  .hero-detail-tag{
-    display:inline-flex;
-    align-items:center;
-    padding:0.5rem 1.1rem;
-    border:1px solid rgba(255,255,255,0.18);
-    border-radius:999px;
-    background:rgba(74,74,74,0.65);
-    -webkit-backdrop-filter:blur(6px);
-    backdrop-filter:blur(6px);
-    font-family:var(--ff-mono);
-    font-size:0.7rem;
-    letter-spacing:0.12em;
-    text-transform:uppercase;
-    color:#ffffff;
-  }
+  /* hero-detail-tags / hero-detail-tag (oval tag pills below the
+     project title) removed per request — no longer rendered on any
+     project. */
 
   /* meta-bar removed — hero now shows only the project title */
 
@@ -1049,7 +1030,6 @@
     </a>
     <div class="hero-detail-content">
       <h1 class="hero-detail-title" id="heroTitle">Project</h1>
-      <div class="hero-detail-tags" id="heroTag"></div>
     </div>
   </div>
 
@@ -1425,9 +1405,6 @@
       heroLogoOverlayEl.classList.toggle('has-wordmark', showWordmark);
     }
     document.getElementById('heroTitle').textContent = data.title;
-    document.getElementById('heroTag').innerHTML = data.tag.map(function(t){
-      return '<span class="hero-detail-tag">'+esc(t)+'</span>';
-    }).join('');
 
     document.getElementById('overviewCopy').innerHTML = data.overview.map(function(t){return '<p>'+esc(t)+'</p>';}).join('');
     document.getElementById('challengeCopy').innerHTML = data.challenge.map(function(t){return '<p>'+esc(t)+'</p>';}).join('');
