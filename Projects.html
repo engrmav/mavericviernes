@@ -412,11 +412,22 @@
   #detail-hero .zw-star{
     position:absolute;
     left:50%;
-    top:-0.52em;
+    top:-0.3em;
     transform:translateX(-50%);
-    width:0.44em;
-    height:0.44em;
+    width:0.42em;
+    height:0.42em;
     display:block;
+  }
+  /* When the Zapier wordmark is active, the overlay box shrink-wraps
+     to the word's actual rendered width instead of using the fixed
+     clamp() width sized for the default logo image. Since the box is
+     still centered via top/left:50% + translate(-50%,-50%), sizing it
+     to its real content width is what guarantees the word lands
+     exactly on the true horizontal center, no matter how wide the
+     text gets at large font sizes. */
+  #detail-hero .hero-logo-overlay.has-wordmark{
+    width:max-content;
+    max-width:none;
   }
   .hero-detail-content{
     position:relative;
@@ -1409,7 +1420,9 @@
       heroBgEl.style.backgroundColor = '';
     }
     if(heroLogoOverlayEl){
-      heroLogoOverlayEl.innerHTML = ZAPIER_WORDMARK_SLUGS[p] ? ZAPIER_WORDMARK_HTML : DEFAULT_HERO_LOGO_HTML;
+      var showWordmark = !!ZAPIER_WORDMARK_SLUGS[p];
+      heroLogoOverlayEl.innerHTML = showWordmark ? ZAPIER_WORDMARK_HTML : DEFAULT_HERO_LOGO_HTML;
+      heroLogoOverlayEl.classList.toggle('has-wordmark', showWordmark);
     }
     document.getElementById('heroTitle').textContent = data.title;
     document.getElementById('heroTag').innerHTML = data.tag.map(function(t){
