@@ -463,6 +463,29 @@
   }
   .case-copy p + p{margin-top:1.1rem;}
 
+  /* ---------- PROJECT IMAGES — real screenshots shown directly below
+     the Overview copy. An auto-fit grid means the number of images
+     decides the layout on its own: one image fills the row, two sit
+     side by side, three sit in an even row — with no cropping, so
+     every image keeps its original aspect ratio. Collapses to a
+     single column on mobile so nothing overflows horizontally. */
+  .project-images{
+    display:grid;
+    grid-template-columns:repeat(auto-fit, minmax(280px, 1fr));
+    gap:1.2rem;
+    margin-top:2rem;
+  }
+  .project-images img{
+    width:100%;
+    height:auto;
+    display:block;
+    border-radius:14px;
+    border:1px solid var(--line);
+  }
+  @media (max-width:640px){
+    .project-images{grid-template-columns:1fr;gap:1rem;}
+  }
+
   /* ---------- PROJECT GALLERY — large center image, side arrows, dot
      indicators; behaves like a classic photo-viewer carousel ---------- */
   .gallery{
@@ -987,6 +1010,7 @@
     <section class="case-section">
       <div class="case-head solo"><span class="eyebrow"><span class="head-dash">—</span>Overview</span></div>
       <div class="case-copy" id="overviewCopy"></div>
+      <div class="project-images" id="projectImages"></div>
       <div class="gallery" id="gallery" tabindex="0">
         <div class="gallery-viewport">
           <div class="gallery-track" id="galleryTrack"></div>
@@ -1117,6 +1141,30 @@
   // the reference photo's warm gold mood, built from scratch in CSS —
   // not the reference image itself.
   var HERO_BG = 'linear-gradient(150deg, #e3ad19 0%, #cf9f1f 42%, #b78a17 72%, #a5790f 100%)';
+
+  // Real project screenshots shown directly below the Overview copy.
+  // Files live in an "image-projects" folder alongside this page.
+  var PROJECT_IMAGES = {
+    'fitness-gym-automation':[
+      {src:'image-projects/GYM.png', alt:'Gym Management System n8n automation workflow'}
+    ],
+    'smartserve-ai-agent':[
+      {src:'image-projects/Bigasan_AI_Chatbot.png', alt:'Facebook Page AI Chatbot n8n workflow'},
+      {src:'image-projects/Screenshot_2026-09-04_201328.png', alt:'Rice Business FAQ knowledge base document'}
+    ],
+    'healthfacts-content-automation':[
+      {src:'image-projects/1785762595504.jpg', alt:'FB Automation n8n workflow for health content generation'},
+      {src:'image-projects/1785762595343.jpg', alt:'AI Content Creation Google Sheet with generated facts and image URLs'},
+      {src:'image-projects/1785762595510.jpg', alt:'Published Health Facts Facebook post'}
+    ],
+    'leadtrack-crm':[
+      {src:'image-projects/Logistic_Leads_Qualification_-_CRM.png', alt:'Zapier lead qualification workflow with HubSpot and Slack'},
+      {src:'image-projects/Slack.png', alt:'Slack channel receiving qualified logistics lead notifications'}
+    ],
+    'courseflow-enrollment':[
+      {src:'image-projects/Zapier_-_Course_Enrollment___Email_Automation.png', alt:'Zapier course enrollment and email automation workflow'}
+    ]
+  };
 
   // Gallery slides per project — placeholders standing in for real
   // screenshots/photos. Swap any 'bg' value for a real image URL
@@ -1316,6 +1364,9 @@
     }).join('');
 
     document.getElementById('overviewCopy').innerHTML = data.overview.map(function(t){return '<p>'+esc(t)+'</p>';}).join('');
+    document.getElementById('projectImages').innerHTML = (PROJECT_IMAGES[p] || []).map(function(im){
+      return '<img src="'+esc(im.src)+'" alt="'+esc(im.alt)+'" loading="lazy">';
+    }).join('');
     document.getElementById('challengeCopy').innerHTML = data.challenge.map(function(t){return '<p>'+esc(t)+'</p>';}).join('');
     document.getElementById('solutionCopy').innerHTML = data.solution.map(function(t){return '<p>'+esc(t)+'</p>';}).join('');
 
