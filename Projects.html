@@ -1331,18 +1331,26 @@
   // "zapier", all orange, transparent background. The "i" is a real
   // dotless-i character (ı) flowing in the normal text line, so it
   // automatically sits on the exact same baseline as every other
-  // letter — no manual vertical alignment needed. The asterisk is
-  // four crossing rounded bars, absolutely positioned above just
-  // that one character.
+  // letter — no manual vertical alignment needed. The asterisk is 8
+  // flat-tipped blades radiating from the center with a rounded-
+  // square hole punched out of the middle (via an SVG mask), matching
+  // the real Zapier mark rather than a plain 4-bar crossing.
   var ZAPIER_WORDMARK_HTML =
     '<div class="zapier-wordmark" role="img" aria-label="Zapier">' +
       'zap' +
       '<span class="zw-i-holder">ı' +
-        '<svg class="zw-star" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg" fill="#ff4f00">' +
-          '<rect x="42" y="4" width="16" height="92" rx="8"/>' +
-          '<rect x="42" y="4" width="16" height="92" rx="8" transform="rotate(45 50 50)"/>' +
-          '<rect x="42" y="4" width="16" height="92" rx="8" transform="rotate(90 50 50)"/>' +
-          '<rect x="42" y="4" width="16" height="92" rx="8" transform="rotate(135 50 50)"/>' +
+        '<svg class="zw-star" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">' +
+          '<mask id="zwAsteriskMask">' +
+            '<rect x="0" y="0" width="100" height="100" fill="black"/>' +
+            '<g fill="white">' +
+              '<rect x="41" y="3" width="18" height="94"/>' +
+              '<rect x="41" y="3" width="18" height="94" transform="rotate(45 50 50)"/>' +
+              '<rect x="41" y="3" width="18" height="94" transform="rotate(90 50 50)"/>' +
+              '<rect x="41" y="3" width="18" height="94" transform="rotate(135 50 50)"/>' +
+            '</g>' +
+            '<rect x="33" y="33" width="34" height="34" rx="12" fill="black"/>' +
+          '</mask>' +
+          '<rect x="0" y="0" width="100" height="100" fill="#ff4f00" mask="url(#zwAsteriskMask)"/>' +
         '</svg>' +
       '</span>' +
       'er' +
