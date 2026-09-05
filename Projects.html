@@ -384,11 +384,18 @@
      transparent background, asterisk/star built from four crossing
      rounded bars sitting directly above a plain vertical "i" stem so
      it reads as the Zapier mark regardless of which font is available. */
+  /* Zapier text wordmark — swapped in only for the two Zapier-powered
+     project headers (see ZAPIER_WORDMARK_SLUGS in the script below),
+     in place of the default centered logo image. Solid orange, fully
+     transparent background. The "i" is a real dotless-i character
+     flowing in the normal text line (so it sits on the exact same
+     baseline as every other letter, no manual alignment needed) with
+     the asterisk/star absolutely positioned above just that glyph. */
   #detail-hero .zapier-wordmark{
-    display:flex;
-    align-items:flex-end;
-    justify-content:center;
+    display:block;
     width:100%;
+    text-align:center;
+    white-space:nowrap;
     font-family:'Arial Rounded MT Bold','Poppins','Helvetica Neue',Arial,sans-serif;
     font-weight:800;
     font-size:clamp(2.4rem, 5.6vw, 4.6rem);
@@ -398,28 +405,17 @@
     background:transparent;
     user-select:none;
   }
-  #detail-hero .zw-i-wrap{
+  #detail-hero .zw-i-holder{
     position:relative;
-    display:inline-flex;
-    align-items:flex-end;
-    height:1em;
-    width:0.3em;
-    margin:0 0.01em;
-  }
-  #detail-hero .zw-i-bar{
-    display:block;
-    width:0.16em;
-    height:0.6em;
-    border-radius:0.08em;
-    background:#ff4f00;
+    display:inline-block;
   }
   #detail-hero .zw-star{
     position:absolute;
     left:50%;
-    top:-0.46em;
+    top:-0.52em;
     transform:translateX(-50%);
-    width:0.46em;
-    height:0.46em;
+    width:0.44em;
+    height:0.44em;
     display:block;
   }
   .hero-detail-content{
@@ -1332,23 +1328,24 @@
   // its existing hero-logo-overlay image untouched.
   var ZAPIER_WORDMARK_SLUGS = {'leadtrack-crm':true, 'courseflow-enrollment':true};
 
-  // "zapier", all orange, transparent background — the asterisk is
-  // four crossing rounded bars positioned above a plain vertical
-  // stem standing in for the "i" (rather than relying on a font's
-  // own dotted "i" glyph, which would put the mark in the wrong spot).
+  // "zapier", all orange, transparent background. The "i" is a real
+  // dotless-i character (ı) flowing in the normal text line, so it
+  // automatically sits on the exact same baseline as every other
+  // letter — no manual vertical alignment needed. The asterisk is
+  // four crossing rounded bars, absolutely positioned above just
+  // that one character.
   var ZAPIER_WORDMARK_HTML =
     '<div class="zapier-wordmark" role="img" aria-label="Zapier">' +
-      '<span>zap</span>' +
-      '<span class="zw-i-wrap">' +
+      'zap' +
+      '<span class="zw-i-holder">ı' +
         '<svg class="zw-star" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg" fill="#ff4f00">' +
           '<rect x="42" y="4" width="16" height="92" rx="8"/>' +
           '<rect x="42" y="4" width="16" height="92" rx="8" transform="rotate(45 50 50)"/>' +
           '<rect x="42" y="4" width="16" height="92" rx="8" transform="rotate(90 50 50)"/>' +
           '<rect x="42" y="4" width="16" height="92" rx="8" transform="rotate(135 50 50)"/>' +
         '</svg>' +
-        '<span class="zw-i-bar"></span>' +
       '</span>' +
-      '<span>er</span>' +
+      'er' +
     '</div>';
 
   // Captured once, before any render() call ever touches this element,
