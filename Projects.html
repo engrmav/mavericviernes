@@ -1110,13 +1110,13 @@
     };
   })();
 
-  // A single, yellow-dominant header background used for every project so
-  // every title header shares the same look. Black abstract shadow forms
-  // and grain are layered on top via the .hero-bg::before/::after CSS
-  // rules above; this is just the yellow base tone itself. Inspired by
-  // the reference photo's warm gold mood, built from scratch in CSS —
-  // not the reference image itself.
-  var HERO_BG = 'linear-gradient(150deg, #e3ad19 0%, #cf9f1f 42%, #b78a17 72%, #a5790f 100%)';
+  // A single header background used for every project so every title
+  // header shares the same look. Black abstract shadow forms and grain
+  // are layered on top via the .hero-bg::before/::after CSS rules above;
+  // this is just the base image itself — a premium golden-black cinematic
+  // gradient (deep black/brown corners, warm amber-gold glow center,
+  // fine grain, soft vignette) replacing the old flat yellow tone.
+  var HERO_BG = 'url(/image-projects/n8n-project-background.jpg)';
 
   // Gallery slides per project — placeholders standing in for real
   // screenshots/photos. Swap any 'bg' value for a real image URL
