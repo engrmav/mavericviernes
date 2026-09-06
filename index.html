@@ -563,6 +563,17 @@
     object-fit:cover;
     filter:saturate(0.92) contrast(1.05);
   }
+  /* Mobile-only rendering hint: keeps the hero video promoted to its own
+     compositing layer while it's being scrubbed, so each seek's repaint
+     doesn't get batched in with the rest of the page during touch
+     scrolling. Purely a performance hint — same look, same layout, and
+     desktop is completely untouched. */
+  @media (max-width:720px){
+    #heroVideo{
+      will-change:transform;
+      transform:translateZ(0);
+    }
+  }
   .hero-scrim{
     position:absolute;inset:0;
     background:linear-gradient(180deg, rgba(var(--ink-rgb),0.15) 0%, rgba(var(--ink-rgb),0) 32%, rgba(var(--ink-rgb),0) 60%, rgba(var(--ink-rgb),0.75) 100%);
@@ -2768,23 +2779,72 @@
   var heroWrap = document.getElementById('hero-wrap');
   video.pause();
 
-  function scrubVideo(){
-    if(!video.duration || isNaN(video.duration)) return;
+  function computeHeroScrubTarget(){
+    if(!video.duration || isNaN(video.duration)) return null;
     var rect = heroWrap.getBoundingClientRect();
     var total = heroWrap.offsetHeight - window.innerHeight;
     var p = -rect.top / total;
     p = Math.min(Math.max(p, 0), 1);
-    var target = p * video.duration;
+    return p * video.duration;
+  }
+
+  // Desktop path — unchanged: one scroll-driven rAF-scheduled seek per
+  // scroll event, exactly as before.
+  function scrubVideo(){
+    var target = computeHeroScrubTarget();
+    if(target === null) return;
     if(Math.abs(video.currentTime - target) > 0.02){
       video.currentTime = target;
     }
   }
 
-  video.addEventListener('loadedmetadata', scrubVideo);
-  window.addEventListener('scroll', function(){
-    requestAnimationFrame(scrubVideo);
-  }, {passive:true});
-  window.addEventListener('resize', scrubVideo);
+  // Mobile path only: touch-driven scrolling on phones fires far more
+  // scroll events than desktop wheel scrolling, and each one used to
+  // schedule its own rAF call that issued a video.currentTime seek. Mobile
+  // decoders can't keep up with that request rate, so seeks pile up behind
+  // one another — that backlog is what reads as laggy/delayed/choppy
+  // scrubbing. This path instead runs a single persistent rAF loop (not
+  // re-triggered per scroll event) that reads the live scroll position each
+  // frame and only issues a new seek once the previous one has actually
+  // finished (video.seeking), so requests never queue up behind the
+  // decoder. It also skips all work whenever the hero section is scrolled
+  // out of view (via IntersectionObserver), so nothing runs once the user
+  // has scrolled past it. Because it reads scroll position straight from
+  // the DOM every animation frame instead of listening for the 'scroll'
+  // event, it also never calls preventDefault or otherwise interferes with
+  // native touch scrolling.
+  var heroMql = window.matchMedia('(max-width:720px)');
+
+  function initMobileHeroScrub(){
+    var heroInView = true;
+    if('IntersectionObserver' in window){
+      var io = new IntersectionObserver(function(entries){
+        heroInView = entries[0].isIntersecting;
+      }, {threshold:0});
+      io.observe(heroWrap);
+    }
+    function mobileScrubLoop(){
+      requestAnimationFrame(mobileScrubLoop);
+      if(!heroInView) return;
+      if(video.seeking) return; // let the in-flight seek finish before requesting another
+      var target = computeHeroScrubTarget();
+      if(target === null) return;
+      if(Math.abs(video.currentTime - target) > 0.02){
+        video.currentTime = target;
+      }
+    }
+    requestAnimationFrame(mobileScrubLoop);
+  }
+
+  if(heroMql.matches){
+    initMobileHeroScrub();
+  } else {
+    video.addEventListener('loadedmetadata', scrubVideo);
+    window.addEventListener('scroll', function(){
+      requestAnimationFrame(scrubVideo);
+    }, {passive:true});
+    window.addEventListener('resize', scrubVideo);
+  }
 
   // ---- Tool Stack: pinned stacked -> scatter scroll animation ----
   // Every .tool-card starts piled on top of the others in one tight central
