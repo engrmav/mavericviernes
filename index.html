@@ -2820,68 +2820,72 @@
     if('IntersectionObserver' in window){
       var io = new IntersectionObserver(function(entries){
         heroInView = entries[0].isIntersecting;
-      }, {threshold:0});
+      }, {threshold:0, rootMargin:'80px 0px'});
       io.observe(heroWrap);
     }
 
-    // Mobile browsers resize window.innerHeight as the address bar/tab
-    // bar collapses and expands *during* scroll — not just on a real
-    // rotation/resize. computeHeroScrubTarget() divides by
-    // (heroWrap.offsetHeight - window.innerHeight), so reading a
-    // constantly-fluctuating innerHeight every animation frame means the
-    // computed target can swing to a different value purely because the
-    // browser chrome moved, not because the user actually scrolled
-    // further — which is what shows up as the video jumping/replaying
-    // mid-scroll. Snapshotting the viewport height once, and only
-    // refreshing it on a real, settled resize/orientation change, keeps
-    // the target driven purely by actual scroll position.
-    var cachedViewportHeight = window.innerHeight;
-    function refreshViewportHeight(){ cachedViewportHeight = window.innerHeight; }
-    window.addEventListener('orientationchange', refreshViewportHeight);
-    var viewportResizeSettleTimer = null;
-    window.addEventListener('resize', function(){
-      clearTimeout(viewportResizeSettleTimer);
-      // Debounced: mobile fires a burst of resize events while the
-      // toolbar animates in/out. Only treat the *settled* height as real.
-      viewportResizeSettleTimer = setTimeout(refreshViewportHeight, 200);
+    // Root cause of the "jumps/replays from the beginning" bug: mobile
+    // Safari/Chrome resize window.innerHeight *while the page is actively
+    // being scrolled*, as the address bar / toolbar collapses and expands.
+    // heroWrap's own height (340vh) doesn't move, but computeHeroScrubTarget()
+    // divides by (heroWrap.offsetHeight - window.innerHeight) — so the exact
+    // same scroll position could momentarily compute a completely different
+    // progress the instant the toolbar animates, which reads as the video
+    // snapping to a wrong frame (often near the start, since a shrinking
+    // denominator swings the ratio hard). Desktop never hits this because
+    // desktop browsers don't resize the viewport during scroll, which is why
+    // this was never visible there and scrubVideo()/computeHeroScrubTarget()
+    // above are left untouched.
+    //
+    // Fix: cache a "stable" viewport height for this math and only update it
+    // on a genuine resize (rotation, real window resize) — detected as a
+    // width change, or a height change too large to be a toolbar animation —
+    // never on the small height-only deltas the toolbar itself produces.
+    var stableViewportHeight = window.innerHeight;
+    var lastWidth = window.innerWidth;
+    function refreshStableViewportHeight(){
+      var w = window.innerWidth;
+      var h = window.innerHeight;
+      if(w !== lastWidth || Math.abs(h - stableViewportHeight) > 150){
+        stableViewportHeight = h;
+        lastWidth = w;
+      }
+    }
+    window.addEventListener('resize', refreshStableViewportHeight);
+    window.addEventListener('orientationchange', function(){
+      // Give the browser a moment to settle so this reads the real
+      // post-rotation size, not a mid-animation intermediate value.
+      setTimeout(function(){
+        stableViewportHeight = window.innerHeight;
+        lastWidth = window.innerWidth;
+      }, 50);
     });
 
-    function computeMobileScrubTarget(){
+    // Last progress (0–1) actually applied to the video. Doubles as the
+    // "hold" value whenever a fresh reading isn't available yet — the video
+    // simply keeps its current frame rather than being touched — so a scroll
+    // position never resolves to an earlier point in the video than the user
+    // has already reached.
+    var lastGoodProgress = 0;
+
+    function computeHeroScrubProgressMobile(){
       if(!video.duration || isNaN(video.duration)) return null;
       var rect = heroWrap.getBoundingClientRect();
-      var total = heroWrap.offsetHeight - cachedViewportHeight;
+      var total = heroWrap.offsetHeight - stableViewportHeight;
       if(total <= 0) return null;
       var p = -rect.top / total;
-      p = Math.min(Math.max(p, 0), 1); // never produces an out-of-range seek
-      return p * video.duration;
+      return Math.min(Math.max(p, 0), 1);
     }
-
-    // The target we last asked the video to seek to. Once its 'seeked'
-    // state clears, we confirm currentTime actually landed there — if it
-    // silently snapped somewhere else instead (decoder reclaimed under
-    // memory pressure, keyframe snapping, etc.), that's exactly what an
-    // unexpected jump/replay looks like, so we reassert the real target
-    // rather than treating the drifted value as the new truth.
-    var pendingSeekTarget = null;
 
     function mobileScrubLoop(){
       requestAnimationFrame(mobileScrubLoop);
       if(!heroInView) return;
       if(video.seeking) return; // let the in-flight seek finish before requesting another
-
-      if(pendingSeekTarget !== null){
-        if(Math.abs(video.currentTime - pendingSeekTarget) > 0.2){
-          video.currentTime = pendingSeekTarget; // correct the drift, don't accept it
-          return;
-        }
-        pendingSeekTarget = null;
-      }
-
-      var target = computeMobileScrubTarget();
-      if(target === null) return; // keep the last valid frame rather than guessing
-
+      var p = computeHeroScrubProgressMobile();
+      if(p === null) return; // nothing trustworthy yet — hold last frame
+      lastGoodProgress = p;
+      var target = lastGoodProgress * video.duration;
       if(Math.abs(video.currentTime - target) > 0.02){
-        pendingSeekTarget = target;
         video.currentTime = target;
       }
     }
