@@ -536,6 +536,21 @@
     height:340vh;
     background:var(--ink);
   }
+  /* Mobile-only: shorten how much scrolling it takes to get through the
+     hero video. This only changes the scroll DISTANCE (the tall wrapper
+     the sticky video pins inside of) — the sticky pin itself stays 100vh,
+     the video is untouched, and the 0→1 scroll-progress math already reads
+     heroWrap's live offsetHeight every frame (see computeHeroScrubTarget
+     for desktop and computeHeroScrubProgressMobile for mobile below), so
+     it automatically maps the full video across whatever height is set
+     here — no JS changes needed. Scoped to the same <=720px breakpoint
+     used everywhere else on the page for mobile-only rules; desktop keeps
+     340vh exactly as it was. */
+  @media (max-width:720px){
+    #hero-wrap{
+      height:220vh;
+    }
+  }
   #hero-sticky{
     position:sticky;
     top:0;
