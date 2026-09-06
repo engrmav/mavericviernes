@@ -539,11 +539,13 @@
   /* Mobile-only: shorten how much scrolling it takes to get through the
      hero video. This only changes the scroll DISTANCE (the tall wrapper
      the sticky video pins inside of) — the sticky pin itself stays 100vh,
-     the video is untouched, and the 0→1 scroll-progress math already reads
-     heroWrap's live offsetHeight every frame (see computeHeroScrubTarget
-     for desktop and computeHeroScrubProgressMobile for mobile below), so
-     it automatically maps the full video across whatever height is set
-     here — no JS changes needed. Scoped to the same <=720px breakpoint
+     the video is untouched, and on desktop the 0→1 scroll-progress math
+     already reads heroWrap's live offsetHeight every frame (see
+     computeHeroScrubTarget below), so it automatically maps the full video
+     across whatever height is set here — no JS changes needed. Mobile no
+     longer scroll-scrubs the video (see initMobileHeroTrigger below), so
+     this height only affects how much the sticky pin scrolls through on
+     mobile, not video timing. Scoped to the same <=720px breakpoint
      used everywhere else on the page for mobile-only rules; desktop keeps
      340vh exactly as it was. */
   @media (max-width:720px){
@@ -2813,102 +2815,88 @@
     }
   }
 
-  // Mobile path only: touch-driven scrolling on phones fires far more
-  // scroll events than desktop wheel scrolling, and each one used to
-  // schedule its own rAF call that issued a video.currentTime seek. Mobile
-  // decoders can't keep up with that request rate, so seeks pile up behind
-  // one another — that backlog is what reads as laggy/delayed/choppy
-  // scrubbing. This path instead runs a single persistent rAF loop (not
-  // re-triggered per scroll event) that reads the live scroll position each
-  // frame and only issues a new seek once the previous one has actually
-  // finished (video.seeking), so requests never queue up behind the
-  // decoder. It also skips all work whenever the hero section is scrolled
-  // out of view (via IntersectionObserver), so nothing runs once the user
-  // has scrolled past it. Because it reads scroll position straight from
-  // the DOM every animation frame instead of listening for the 'scroll'
-  // event, it also never calls preventDefault or otherwise interferes with
-  // native touch scrolling.
   var heroMql = window.matchMedia('(max-width:720px)');
 
-  function initMobileHeroScrub(){
-    var heroInView = true;
+  // Mobile path only: replaces the old scroll-scrubbed (currentTime-synced)
+  // playback with plain scroll-triggered playback. The video is no longer
+  // continuously seeked against scroll position on mobile at all — instead:
+  //   1. Scrolling into the Hero Section starts the video playing normally,
+  //      from wherever it currently is, straight through to the end.
+  //   2. When it finishes, it simply stops (native <video> behavior with no
+  //      loop attribute) and holds on the final frame.
+  //   3. The next genuine scroll interaction, while still inside the Hero
+  //      Section, restarts it from the beginning.
+  // Desktop is completely untouched: scrubVideo()/computeHeroScrubTarget()
+  // above still drive the old scroll-scrubbed effect exactly as before.
+  function initMobileHeroTrigger(){
+    // 'idle'     -> hasn't played since last entering the Hero Section
+    // 'playing'  -> currently mid-playback
+    // 'finished' -> played through to the end and is holding its last frame
+    var state = 'idle';
+
+    function playFromStart(){
+      state = 'playing';
+      try{ video.currentTime = 0; }catch(e){}
+      var p = video.play();
+      // Autoplay can be rejected (e.g. before any user gesture); swallow
+      // that instead of throwing an unhandled promise rejection. The next
+      // scroll/visibility pass will simply try again.
+      if(p && typeof p.catch === 'function'){
+        p.catch(function(){ state = 'idle'; });
+      }
+    }
+
+    video.addEventListener('ended', function(){
+      state = 'finished';
+    });
+
+    // Drives rule 1 (scroll-into-view autoplay) and also resets state when
+    // the section is scrolled fully out of view, so scrolling back into it
+    // later plays it again from the top rather than resuming mid-video.
     if('IntersectionObserver' in window){
       var io = new IntersectionObserver(function(entries){
-        heroInView = entries[0].isIntersecting;
-      }, {threshold:0, rootMargin:'80px 0px'});
+        var entry = entries[0];
+        if(entry.isIntersecting){
+          if(state === 'idle') playFromStart();
+        } else {
+          state = 'idle';
+          video.pause();
+          try{ video.currentTime = 0; }catch(e){}
+        }
+      }, {threshold:0.25});
       io.observe(heroWrap);
     }
 
-    // Root cause of the "jumps/replays from the beginning" bug: mobile
-    // Safari/Chrome resize window.innerHeight *while the page is actively
-    // being scrolled*, as the address bar / toolbar collapses and expands.
-    // heroWrap's own height (340vh) doesn't move, but computeHeroScrubTarget()
-    // divides by (heroWrap.offsetHeight - window.innerHeight) — so the exact
-    // same scroll position could momentarily compute a completely different
-    // progress the instant the toolbar animates, which reads as the video
-    // snapping to a wrong frame (often near the start, since a shrinking
-    // denominator swings the ratio hard). Desktop never hits this because
-    // desktop browsers don't resize the viewport during scroll, which is why
-    // this was never visible there and scrubVideo()/computeHeroScrubTarget()
-    // above are left untouched.
-    //
-    // Fix: cache a "stable" viewport height for this math and only update it
-    // on a genuine resize (rotation, real window resize) — detected as a
-    // width change, or a height change too large to be a toolbar animation —
-    // never on the small height-only deltas the toolbar itself produces.
-    var stableViewportHeight = window.innerHeight;
-    var lastWidth = window.innerWidth;
-    function refreshStableViewportHeight(){
-      var w = window.innerWidth;
-      var h = window.innerHeight;
-      if(w !== lastWidth || Math.abs(h - stableViewportHeight) > 150){
-        stableViewportHeight = h;
-        lastWidth = w;
-      }
-    }
-    window.addEventListener('resize', refreshStableViewportHeight);
-    window.addEventListener('orientationchange', function(){
-      // Give the browser a moment to settle so this reads the real
-      // post-rotation size, not a mid-animation intermediate value.
-      setTimeout(function(){
-        stableViewportHeight = window.innerHeight;
-        lastWidth = window.innerWidth;
-      }, 50);
-    });
+    // Drives rules 4–6 (replay-on-next-scroll, once per gesture). Rather
+    // than reacting to every 'scroll' event fired mid-gesture (which on
+    // touch devices can be dozens per second), a trailing debounce collapses
+    // an entire continuous scroll gesture into a single trigger: the first
+    // scroll event after the video has finished fires the replay and locks
+    // out further triggers; the lock only releases once scrolling has
+    // actually stopped for a beat, so one swipe/gesture can never restart
+    // the video more than once.
+    var scrollEndTimer = null;
+    var gestureLocked = false;
 
-    // Last progress (0–1) actually applied to the video. Doubles as the
-    // "hold" value whenever a fresh reading isn't available yet — the video
-    // simply keeps its current frame rather than being touched — so a scroll
-    // position never resolves to an earlier point in the video than the user
-    // has already reached.
-    var lastGoodProgress = 0;
+    function onScroll(){
+      if(scrollEndTimer) clearTimeout(scrollEndTimer);
+      scrollEndTimer = setTimeout(function(){ gestureLocked = false; }, 150);
 
-    function computeHeroScrubProgressMobile(){
-      if(!video.duration || isNaN(video.duration)) return null;
+      if(gestureLocked) return;
+      if(state !== 'finished') return;
+
       var rect = heroWrap.getBoundingClientRect();
-      var total = heroWrap.offsetHeight - stableViewportHeight;
-      if(total <= 0) return null;
-      var p = -rect.top / total;
-      return Math.min(Math.max(p, 0), 1);
-    }
+      var stillInHero = rect.top < window.innerHeight && rect.bottom > 0;
+      if(!stillInHero) return;
 
-    function mobileScrubLoop(){
-      requestAnimationFrame(mobileScrubLoop);
-      if(!heroInView) return;
-      if(video.seeking) return; // let the in-flight seek finish before requesting another
-      var p = computeHeroScrubProgressMobile();
-      if(p === null) return; // nothing trustworthy yet — hold last frame
-      lastGoodProgress = p;
-      var target = lastGoodProgress * video.duration;
-      if(Math.abs(video.currentTime - target) > 0.02){
-        video.currentTime = target;
-      }
+      gestureLocked = true;
+      playFromStart();
     }
-    requestAnimationFrame(mobileScrubLoop);
+    window.addEventListener('scroll', onScroll, {passive:true});
   }
 
   if(heroMql.matches){
-    initMobileHeroScrub();
+    initMobileHeroTrigger();
   } else {
     video.addEventListener('loadedmetadata', scrubVideo);
     window.addEventListener('scroll', function(){
