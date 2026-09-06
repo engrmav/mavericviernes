@@ -2820,17 +2820,26 @@
   // Mobile path only: replaces the old scroll-scrubbed (currentTime-synced)
   // playback with plain scroll-triggered playback. The video is no longer
   // continuously seeked against scroll position on mobile at all — instead:
-  //   1. Scrolling into the Hero Section starts the video playing normally,
-  //      from wherever it currently is, straight through to the end.
-  //   2. When it finishes, it simply stops (native <video> behavior with no
+  //   1. Scrolling into / interacting with the Hero Section starts the
+  //      video playing normally, from the beginning, straight through to
+  //      the end.
+  //   2. Once started, playback is NEVER interrupted by the Hero Section
+  //      leaving the viewport — no pause, no currentTime reset, no state
+  //      change. Viewport visibility is only ever used to trigger the
+  //      START of a playthrough, never to control one already in progress,
+  //      so the video keeps playing in the background even after the user
+  //      has scrolled well past the Hero Section.
+  //   3. When it finishes, it simply stops (native <video> behavior with no
   //      loop attribute) and holds on the final frame.
-  //   3. The next genuine scroll interaction, while still inside the Hero
-  //      Section, restarts it from the beginning.
+  //   4. The next genuine scroll interaction with the Hero Section — either
+  //      scrolling back into it, or scrolling further while still inside
+  //      it — restarts playback from the beginning, once per gesture.
   // Desktop is completely untouched: scrubVideo()/computeHeroScrubTarget()
   // above still drive the old scroll-scrubbed effect exactly as before.
   function initMobileHeroTrigger(){
-    // 'idle'     -> hasn't played since last entering the Hero Section
-    // 'playing'  -> currently mid-playback
+    // 'idle'     -> hasn't played yet this pageview
+    // 'playing'  -> currently mid-playback; must run to completion
+    //               regardless of scroll position or Hero visibility
     // 'finished' -> played through to the end and is holding its last frame
     var state = 'idle';
 
@@ -2850,18 +2859,20 @@
       state = 'finished';
     });
 
-    // Drives rule 1 (scroll-into-view autoplay) and also resets state when
-    // the section is scrolled fully out of view, so scrolling back into it
-    // later plays it again from the top rather than resuming mid-video.
+    // Viewport visibility is ONLY ever used as a trigger to *start* playback
+    // — never to control it once started. Entering the Hero Section kicks
+    // off playback whenever nothing is currently playing (state is 'idle'
+    // the very first time, or 'finished' if a previous playthrough already
+    // completed and the user has scrolled back to trigger a fresh one).
+    // Leaving the viewport is deliberately a no-op: no pause(), no
+    // currentTime reset, no state change — an already-playing video must
+    // keep playing in the background all the way to its natural end even
+    // once the Hero Section has scrolled off-screen.
     if('IntersectionObserver' in window){
       var io = new IntersectionObserver(function(entries){
         var entry = entries[0];
-        if(entry.isIntersecting){
-          if(state === 'idle') playFromStart();
-        } else {
-          state = 'idle';
-          video.pause();
-          try{ video.currentTime = 0; }catch(e){}
+        if(entry.isIntersecting && state !== 'playing'){
+          playFromStart();
         }
       }, {threshold:0.25});
       io.observe(heroWrap);
