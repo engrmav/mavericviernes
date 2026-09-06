@@ -2823,13 +2823,65 @@
       }, {threshold:0});
       io.observe(heroWrap);
     }
+
+    // Mobile browsers resize window.innerHeight as the address bar/tab
+    // bar collapses and expands *during* scroll — not just on a real
+    // rotation/resize. computeHeroScrubTarget() divides by
+    // (heroWrap.offsetHeight - window.innerHeight), so reading a
+    // constantly-fluctuating innerHeight every animation frame means the
+    // computed target can swing to a different value purely because the
+    // browser chrome moved, not because the user actually scrolled
+    // further — which is what shows up as the video jumping/replaying
+    // mid-scroll. Snapshotting the viewport height once, and only
+    // refreshing it on a real, settled resize/orientation change, keeps
+    // the target driven purely by actual scroll position.
+    var cachedViewportHeight = window.innerHeight;
+    function refreshViewportHeight(){ cachedViewportHeight = window.innerHeight; }
+    window.addEventListener('orientationchange', refreshViewportHeight);
+    var viewportResizeSettleTimer = null;
+    window.addEventListener('resize', function(){
+      clearTimeout(viewportResizeSettleTimer);
+      // Debounced: mobile fires a burst of resize events while the
+      // toolbar animates in/out. Only treat the *settled* height as real.
+      viewportResizeSettleTimer = setTimeout(refreshViewportHeight, 200);
+    });
+
+    function computeMobileScrubTarget(){
+      if(!video.duration || isNaN(video.duration)) return null;
+      var rect = heroWrap.getBoundingClientRect();
+      var total = heroWrap.offsetHeight - cachedViewportHeight;
+      if(total <= 0) return null;
+      var p = -rect.top / total;
+      p = Math.min(Math.max(p, 0), 1); // never produces an out-of-range seek
+      return p * video.duration;
+    }
+
+    // The target we last asked the video to seek to. Once its 'seeked'
+    // state clears, we confirm currentTime actually landed there — if it
+    // silently snapped somewhere else instead (decoder reclaimed under
+    // memory pressure, keyframe snapping, etc.), that's exactly what an
+    // unexpected jump/replay looks like, so we reassert the real target
+    // rather than treating the drifted value as the new truth.
+    var pendingSeekTarget = null;
+
     function mobileScrubLoop(){
       requestAnimationFrame(mobileScrubLoop);
       if(!heroInView) return;
       if(video.seeking) return; // let the in-flight seek finish before requesting another
-      var target = computeHeroScrubTarget();
-      if(target === null) return;
+
+      if(pendingSeekTarget !== null){
+        if(Math.abs(video.currentTime - pendingSeekTarget) > 0.2){
+          video.currentTime = pendingSeekTarget; // correct the drift, don't accept it
+          return;
+        }
+        pendingSeekTarget = null;
+      }
+
+      var target = computeMobileScrubTarget();
+      if(target === null) return; // keep the last valid frame rather than guessing
+
       if(Math.abs(video.currentTime - target) > 0.02){
+        pendingSeekTarget = target;
         video.currentTime = target;
       }
     }
