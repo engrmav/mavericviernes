@@ -915,6 +915,10 @@
     margin-bottom:0.5rem;
     display:block;
   }
+  /* Short "PREV"/"NEXT" wording used only on mobile (see 640px block
+     below); hidden by default so desktop keeps showing the existing
+     "← Previous" / "Next →" full wording exactly as before. */
+  .pn-label-short{display:none;}
   .pn-title{
     font-family:var(--ff-display);
     font-size:clamp(1rem,2.4vw,1.4rem);
@@ -932,10 +936,47 @@
   .project-nav-btn.nav-prev:hover .pn-arrow{transform:translateX(-6px);}
   .project-nav-btn.nav-next:hover .pn-arrow{transform:translateX(6px);}
 
+  /* ---------- MOBILE-ONLY: COMPACT SIDE-BY-SIDE PREV/NEXT ----------
+     Desktop rules above (large arrow icon, "← Previous"/"Next →"
+     wording, single-line truncated title) are completely untouched —
+     everything here is scoped inside this existing 640px mobile
+     breakpoint, same one already used for this component.
+     Replaces the previous mobile behavior (which stacked the two
+     buttons into a single column) with a single row of two compact,
+     equally-spaced, easy-to-tap buttons, per the updated mobile spec:
+     the large arrow icon is hidden, only the small inline arrow +
+     short "PREV"/"NEXT" text remains, and the project title is no
+     longer truncated — it's allowed to wrap across lines instead. */
   @media (max-width:640px){
-    .project-nav{grid-template-columns:1fr;}
-    .project-nav-btn.nav-next{justify-content:flex-start;}
-    .project-nav-btn.nav-next .pn-text{text-align:left;}
+    .project-nav{
+      grid-template-columns:1fr 1fr;
+      gap:0.7rem;
+    }
+    .project-nav-btn{
+      padding:0.9rem 1rem;
+      gap:0;
+      min-height:44px;
+      align-items:center;
+    }
+    /* Large arrow icon removed on mobile; the small inline arrow
+       carried inside the PREV/NEXT text (below) is retained instead. */
+    .project-nav-btn .pn-arrow{
+      display:none;
+    }
+    .project-nav-btn.nav-prev{justify-content:flex-start;}
+    .project-nav-btn.nav-next{justify-content:flex-end;}
+    .project-nav-btn.nav-next .pn-text{text-align:right;}
+    .pn-label-full{display:none;}
+    .pn-label-short{display:block;}
+    /* Full project name, wrapped instead of truncated/ellipsized. */
+    .pn-title{
+      white-space:normal;
+      overflow:visible;
+      text-overflow:unset;
+      overflow-wrap:break-word;
+      font-size:clamp(0.82rem,3.4vw,0.95rem);
+      line-height:1.28;
+    }
   }
 
   /* ---------- FOOTER ---------- */
@@ -1171,13 +1212,19 @@
     <a class="project-nav-btn nav-prev" id="prevProject" href="#">
       <svg class="pn-arrow" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M19 12H5M11 6l-6 6 6 6" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
       <div class="pn-text">
-        <span class="pn-label">← Previous</span>
+        <span class="pn-label">
+          <span class="pn-label-full">← Previous</span>
+          <span class="pn-label-short">← PREV</span>
+        </span>
         <span class="pn-title" id="prevTitle">—</span>
       </div>
     </a>
     <a class="project-nav-btn nav-next" id="nextProject" href="#">
       <div class="pn-text">
-        <span class="pn-label">Next →</span>
+        <span class="pn-label">
+          <span class="pn-label-full">Next →</span>
+          <span class="pn-label-short">NEXT →</span>
+        </span>
         <span class="pn-title" id="nextTitle">—</span>
       </div>
       <svg class="pn-arrow" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M5 12h14M13 6l6 6-6 6" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
