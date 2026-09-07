@@ -311,79 +311,34 @@
   .pct b{color:var(--gold);font-weight:400;}
   .pct i{font-style:normal;opacity:0.6;}
 
-  /* ---------- GOLD EXPLOSION ----------
-     Three stacked layers turn "loading finished" into a full-screen gold
-     splatter, built up from back to front:
-       1. #stuckBurst  — a canvas that is NEVER cleared. Every particle
-          that finishes its flight "sticks" here permanently as a glossy
-          gold splat, so the screen visibly and progressively accumulates
-          gold rather than a burst that blooms and fades away.
-       2. #goldBurst   — a canvas cleared every frame, drawing only the
-          particles currently mid-flight (shards/sparks/droplets rocketing
-          outward and growing in size to read as flying toward the
-          viewer, not just sideways across the screen).
-       3. #goldFlood   — a plain full-screen glossy gold layer that fades
-          in right as the splatter finishes, so any gaps the random splats
-          left are seamlessly closed and the screen reads as a single,
-          bold, reflective gold surface with a highlight drifting across
-          it — the "premium" surface the WELCOME reveal sits on top of. */
-  #stuckBurst{
+  /* ---------- GOLD BURST ----------
+     Full-screen canvas that a JS particle system draws into (see the
+     spawnGoldExplosion()/explosionFrame() pair in the loader script). It
+     sits above both .loader-core (z-index:2) and .welcome-wrap (z-index:2)
+     so the chaotic burst of shards/sparks reads as covering the whole
+     frame the instant loading finishes, then — as the particles' own
+     alpha decays — naturally uncovers the WELCOME text sitting beneath it.
+     Canvas is transparent and ignores pointer input; it never affects
+     layout or anything outside the loader. */
+  #goldBurst{
     position:absolute;inset:0;
     width:100%;height:100%;
     z-index:3;
     pointer-events:none;
   }
-  #goldBurst{
-    position:absolute;inset:0;
-    width:100%;height:100%;
-    z-index:4;
-    pointer-events:none;
-  }
-  #goldFlood{
-    position:absolute;inset:0;
-    z-index:5;
-    opacity:0;
-    pointer-events:none;
-    /* A uniform, saturated gold base (not a corner-to-corner radial
-       gradient) so the color reads identically regardless of viewport
-       shape — a full-bleed radial stretches very differently on a tall
-       narrow phone screen than on a wide desktop one, which left a
-       visibly darker patch in one corner on mobile. The soft glow on top
-       is capped to a fixed relative size so it stays a gentle center
-       highlight on any screen instead of a shape-dependent vignette. */
-    background:
-      radial-gradient(ellipse 65% 60% at 44% 40%, rgba(255,255,255,0.4) 0%, rgba(255,255,255,0) 62%),
-      #f2b511;
-    transition:opacity 0.9s cubic-bezier(.3,0,.2,1);
-  }
-  #goldFlood.show{opacity:1;}
-  /* A soft diagonal highlight sweeping across the flooded gold — reads as
-     light rolling across a glossy/reflective surface rather than a flat
-     color fill. Loops gently the whole time the gold screen is showing. */
-  #goldFlood::after{
-    content:'';
-    position:absolute;inset:-20%;
-    background:linear-gradient(115deg, transparent 30%, rgba(255,240,190,0.28) 48%, rgba(255,244,205,0.4) 50%, rgba(255,240,190,0.28) 52%, transparent 70%);
-    opacity:0;
-    animation:floodSheen 3.2s ease-in-out 0.4s infinite;
-  }
-  #goldFlood.show::after{opacity:1;}
-  @keyframes floodSheen{
-    0%{transform:translateX(-55%) translateY(-10%);}
-    50%{transform:translateX(55%) translateY(10%);}
-    100%{transform:translateX(-55%) translateY(-10%);}
-  }
 
   /* ---------- WELCOME ----------
-     Only once the screen has filled with gold does this single oversized
-     word slowly rise into view — the ONLY thing on screen at this moment
-     (no eyebrow, subtitle, rule, or CTA; WELCOME is the sole focal point).
-     Solid white so it reads clearly against the gold surface beneath it,
-     with a warm, dark drop-shadow doing the contrast work rather than any
-     outline, so the letterforms still look soft and premium. */
+     After the gold burst peaks and starts to recede, this single oversized
+     word fades/lifts in beneath it — the ONLY thing on screen at this
+     moment (no eyebrow, subtitle, rule, or CTA anymore; those belonged to
+     the old quieter "Welcome" beat and worked against the brief of WELCOME
+     being the sole focal point). Metallic gold gradient fill on the type
+     itself keeps it visually continuous with the burst that just receded,
+     rather than the reveal feeling like two unrelated effects stitched
+     together. */
   .welcome-wrap{
     position:absolute;
-    z-index:6;
+    z-index:2;
     display:flex;
     flex-direction:column;
     align-items:center;
@@ -393,78 +348,42 @@
   }
   .welcome-wrap.show{
     opacity:1;
-    transition:opacity 0.6s ease;
   }
   .welcome-title{
-    position:relative;
     display:flex;
     font-family:var(--ff-display);
     font-weight:700;
     font-size:clamp(3.4rem, 17vw, 9.5rem);
     line-height:1;
     letter-spacing:0.015em;
-    color:#ffffff;
-    text-shadow:
-      0 2px 0 rgba(90,58,6,0.25),
-      0 10px 30px rgba(60,38,4,0.55),
-      0 0 60px rgba(255,255,255,0.25);
-  }
-  .welcome-title span{
-    display:inline-block;
-    opacity:0;
-    transform:translateY(30px) scale(0.92);
-  }
-  .welcome-wrap.show .welcome-title span{
-    animation:welcomeLetterIn 1.3s cubic-bezier(.15,.9,.2,1) forwards;
-  }
-  .welcome-title span:nth-child(1){animation-delay:0.00s;}
-  .welcome-title span:nth-child(2){animation-delay:0.11s;}
-  .welcome-title span:nth-child(3){animation-delay:0.22s;}
-  .welcome-title span:nth-child(4){animation-delay:0.33s;}
-  .welcome-title span:nth-child(5){animation-delay:0.44s;}
-  .welcome-title span:nth-child(6){animation-delay:0.55s;}
-  .welcome-title span:nth-child(7){animation-delay:0.66s;}
-  @keyframes welcomeLetterIn{to{opacity:1;transform:translateY(0) scale(1);}}
-
-  /* A slow, single pass of warm gold light gliding across the letters —
-     an identical copy of the word, clipped to the text and painted with
-     a moving gold highlight band, layered on top via ::after so the
-     solid white fill underneath is untouched everywhere the band isn't.
-     Fires once the letters have finished resolving, for the "elegant
-     glint" the brief asks for, while the word stays legible white the
-     rest of the time. */
-  .welcome-title::after{
-    content:'WELCOME';
-    position:absolute;inset:0;
-    white-space:nowrap;
-    text-align:center;
-    background-image:linear-gradient(100deg, transparent 40%, rgba(255,223,120,0) 46%, #fff2c4 49%, #ffcf4d 51%, rgba(255,223,120,0) 54%, transparent 60%);
-    background-size:260% 100%;
-    background-position:130% 0;
+    background:linear-gradient(180deg, #fff6d8 0%, var(--gold) 46%, #6e5817 100%);
     -webkit-background-clip:text;
     background-clip:text;
     color:transparent;
     -webkit-text-fill-color:transparent;
+    filter:drop-shadow(0 4px 26px rgba(var(--gold-rgb),0.5));
+  }
+  .welcome-title span{
+    display:inline-block;
     opacity:0;
-    pointer-events:none;
+    transform:translateY(22px) scale(0.94);
   }
-  .welcome-wrap.shine .welcome-title::after{
-    animation:welcomeShine 1.8s cubic-bezier(.35,.05,.25,1) 1;
+  .welcome-wrap.show .welcome-title span{
+    animation:welcomeLetterIn 0.7s cubic-bezier(.15,.9,.2,1) forwards;
   }
-  @keyframes welcomeShine{
-    0%{opacity:0;background-position:150% 0;}
-    12%{opacity:1;}
-    75%{opacity:1;}
-    100%{opacity:0;background-position:-70% 0;}
-  }
+  .welcome-title span:nth-child(1){animation-delay:0.00s;}
+  .welcome-title span:nth-child(2){animation-delay:0.05s;}
+  .welcome-title span:nth-child(3){animation-delay:0.10s;}
+  .welcome-title span:nth-child(4){animation-delay:0.15s;}
+  .welcome-title span:nth-child(5){animation-delay:0.20s;}
+  .welcome-title span:nth-child(6){animation-delay:0.25s;}
+  .welcome-title span:nth-child(7){animation-delay:0.30s;}
+  @keyframes welcomeLetterIn{to{opacity:1;transform:translateY(0) scale(1);}}
 
   @media (prefers-reduced-motion:reduce){
     #loader *{animation-duration:0.01ms !important;animation-iteration-count:1 !important;}
     .loader-sweep{display:none;}
-    #goldBurst, #stuckBurst{display:none;}
-    #goldFlood{transition:none;}
-    #goldFlood::after{display:none;}
-    .welcome-title::after{display:none;}
+    #goldBurst{display:none;}
   }
 
   /* ---------- PAGE TRANSITION (index -> project detail) ----------
@@ -2253,11 +2172,8 @@
   @media (prefers-reduced-motion:reduce){
     .monogram span{animation:none;opacity:1;transform:none;}
     .welcome-wrap.show{animation:none;opacity:1;transform:none;}
-    .welcome-title span{animation:none;opacity:1;transform:none;}
     #loader{transition:none;}
-    #goldBurst, #stuckBurst{display:none;}
-    #goldFlood{opacity:1;transition:none;}
-    #goldFlood::after{display:none;}
+    #goldBurst{display:none;}
   }
 </style>
 </head>
@@ -2298,21 +2214,16 @@
       </div>
       <div class="pct" id="pctLabel"><b id="pctNum">00</b><i>%</i></div>
     </div>
-    <!-- Chaotic gold-particle explosion that bridges the loader build and
-         the WELCOME reveal below. Canvas-driven (not CSS) because the
-         "messy, energetic, overwhelming" brief needs dozens of
-         independently angled/rotated shards, sparks and droplets flying
-         toward the viewer, which a fixed set of DOM/CSS elements can't
-         cheaply fake. Two canvases work together: #stuckBurst is never
-         cleared, so every particle that finishes flying leaves a
-         permanent gold splat behind — the screen visibly fills with gold
-         over time. #goldBurst is cleared every frame and only ever draws
-         particles still mid-flight on top of that. #goldFlood then fades
-         in behind the WELCOME text once the splatter is done, sealing any
-         gaps into one solid, glossy gold surface. -->
-    <canvas id="stuckBurst" aria-hidden="true"></canvas>
+    <!-- Chaotic gold-particle burst that bridges the loader build and the
+         WELCOME reveal below. Canvas-driven (not CSS) because the "messy,
+         energetic, overwhelming" brief needs dozens of independently
+         angled/rotated shards and sparks flying in every direction, which
+         a fixed set of DOM/CSS elements can't cheaply fake. It sits above
+         both .loader-core and .welcome-wrap (see #goldBurst z-index) so
+         the burst visually overwhelms the screen first, then as the
+         particles decelerate and fade the WELCOME text underneath is
+         gradually uncovered — the "recede as WELCOME appears" handoff. -->
     <canvas id="goldBurst" aria-hidden="true"></canvas>
-    <div id="goldFlood" aria-hidden="true"></div>
     <div class="welcome-wrap" id="welcomeWrap">
       <h1 class="welcome-title" aria-label="Welcome">
         <span>W</span><span>E</span><span>L</span><span>C</span><span>O</span><span>M</span><span>E</span>
@@ -2765,8 +2676,6 @@
   var welcome = document.getElementById('welcomeWrap');
   var loader = document.getElementById('loader');
   var goldBurst = document.getElementById('goldBurst');
-  var stuckBurst = document.getElementById('stuckBurst');
-  var goldFlood = document.getElementById('goldFlood');
   var reduceMotion = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 
   var RING_CIRC = 628; // matches stroke-dasharray on .loader-ring-fill (2 * PI * r100)
@@ -2821,59 +2730,47 @@
   }
 
   // ---- Gold explosion: the "Loading -> Gold Explosion -> WELCOME" bridge ----
-  // A canvas particle system fired the instant loading finishes. Three
-  // shape families mix for a "messy, energetic, overwhelming" feel:
+  // A canvas particle burst fired the instant loading finishes. Two shape
+  // families are mixed for a "messy, energetic, overwhelming" feel rather
+  // than a tidy uniform shower:
   //   - "sparks": small glowing dots (soft radial gradient + shadowBlur)
-  //   - "shards": rotated metallic fragments (light-to-dark gold gradient
-  //     so they catch/lose light as they spin, reading as reflective foil)
-  //   - "droplets": elongated liquid-gold blobs with a trailing tail,
-  //     stretched along their direction of travel
-  // Every particle launches from screen-center on its own random
-  // angle/speed/rotation and GROWS as it flies — simulating something
-  // hurtling toward the viewer, not just sliding sideways across the
-  // screen. Rather than fading away, each particle "lands" at its own
-  // random moment and leaves a permanent glossy splat on #stuckBurst (a
-  // canvas that is never cleared), so gold visibly accumulates and
-  // spreads instead of blooming once and receding. A handful of large
-  // "mega splats" are stamped on top late in the sequence to guarantee
-  // the corners/edges fill in too, and #goldFlood then fades in to seal
-  // any remaining gaps into one solid, glossy gold screen.
+  //   - "shards": tiny rotated metallic fragments (a light-to-dark gold
+  //     gradient across each shape so they catch/lose light as they spin,
+  //     reading as reflective foil rather than flat confetti)
+  // Every particle flies outward from screen-center on its own random
+  // angle/speed/rotation, decelerates (drag), and fades on an eased curve
+  // that peaks fast then recedes — so the burst reads as sudden and
+  // chaotic, not a slow gentle bloom. welcome.classList.add('show') is
+  // timed to land while the fade is already underway, so WELCOME emerges
+  // through the gold rather than snapping in after a hard cut.
   var burstCtx = null;
-  var stuckCtx = null;
   var burstParticles = [];
   var burstStart = null;
   var burstRunning = false;
-  var BURST_DURATION = 1900; // ms: total time for every particle to finish flying/landing
-  var BURST_COUNT = 240;
+  var BURST_DURATION = 1500; // ms: total time for every particle to fully decay
+  var BURST_COUNT = 220;
   var GOLD_SHADES = ['#fff6d8', '#f4dd8e', '#d9b23c', '#c9a227', '#a9822a', '#8a7220'];
-  var megaTimers = [];
 
   function sizeBurstCanvas(){
-    if(!goldBurst || !stuckBurst) return;
+    if(!goldBurst) return;
     var dpr = window.devicePixelRatio || 1;
-    [goldBurst, stuckBurst].forEach(function(cv){
-      cv.width = window.innerWidth * dpr;
-      cv.height = window.innerHeight * dpr;
-      cv.style.width = window.innerWidth + 'px';
-      cv.style.height = window.innerHeight + 'px';
-    });
+    goldBurst.width = window.innerWidth * dpr;
+    goldBurst.height = window.innerHeight * dpr;
+    goldBurst.style.width = window.innerWidth + 'px';
+    goldBurst.style.height = window.innerHeight + 'px';
     burstCtx = goldBurst.getContext('2d');
     burstCtx.setTransform(dpr, 0, 0, dpr, 0, 0);
-    stuckCtx = stuckBurst.getContext('2d');
-    stuckCtx.setTransform(dpr, 0, 0, dpr, 0, 0);
   }
 
   function makeBurstParticle(cx, cy){
-    var roll = Math.random();
-    var type = roll < 0.36 ? 'shard' : (roll < 0.62 ? 'droplet' : 'spark');
+    var isShard = Math.random() < 0.45;
     var angle = Math.random() * Math.PI * 2;
     // Wide, uneven speed spread is what makes the burst read as "chaotic"
     // rather than a clean ring — some particles barely move, others rocket
-    // clear off-screen before landing.
-    var speed = 3.5 + Math.random() * Math.random() * 24;
-    var baseSize = type === 'shard' ? (4 + Math.random() * 11) : type === 'droplet' ? (3 + Math.random() * 8) : (1.5 + Math.random() * 4.5);
+    // clear off-screen.
+    var speed = 3.5 + Math.random() * Math.random() * 22;
     return {
-      type: type,
+      shard: isShard,
       x: cx, y: cy,
       vx: Math.cos(angle) * speed,
       vy: Math.sin(angle) * speed,
@@ -2881,27 +2778,19 @@
       // perfectly flat radial explosion — it feels like it's catching air.
       gravity: 0.05 + Math.random() * 0.09,
       drag: 0.965 + Math.random() * 0.02,
-      size: baseSize,
-      // Particles grow as they travel — the "flying toward the screen"
-      // depth cue — then splat out noticeably larger than their flight
-      // size on landing, like gold hitting glass and spreading.
-      growth: 1.006 + Math.random() * 0.01,
+      size: isShard ? (4 + Math.random() * 11) : (1.5 + Math.random() * 4.5),
       rotation: Math.random() * Math.PI * 2,
       spin: (Math.random() - 0.5) * 0.5,
       color: GOLD_SHADES[Math.floor(Math.random() * GOLD_SHADES.length)],
-      // Fraction of BURST_DURATION at which this particle sticks to the
-      // screen. Spread widely (and biased later via the square) so the
-      // gold visibly spreads/accumulates over the whole sequence rather
-      // than all landing at once.
-      stickAt: 0.22 + Math.pow(Math.random(), 0.7) * 0.7,
-      landed: false
+      // Randomized life offset so particles don't all die in lockstep —
+      // reinforces the "messy" feel on the way out too.
+      lifeOffset: Math.random() * 0.25
     };
   }
 
   function spawnGoldExplosion(){
-    if(!goldBurst || !stuckBurst || reduceMotion) return;
+    if(!goldBurst || reduceMotion) return;
     sizeBurstCanvas();
-    stuckCtx.clearRect(0, 0, window.innerWidth, window.innerHeight);
     var cx = window.innerWidth / 2;
     var cy = window.innerHeight / 2;
     burstParticles = [];
@@ -2910,7 +2799,6 @@
     }
     burstStart = null;
     burstRunning = true;
-    scheduleMegaSplats(cx, cy);
     requestAnimationFrame(explosionFrame);
   }
 
@@ -2954,174 +2842,6 @@
     ctx.restore();
   }
 
-  // A liquid-gold droplet: a teardrop stretched along its direction of
-  // travel with a small bright highlight, reading as a bead of molten
-  // gold rather than a hard fragment.
-  function drawDroplet(ctx, p, alpha){
-    ctx.save();
-    ctx.globalAlpha = alpha;
-    var angle = Math.atan2(p.vy, p.vx);
-    ctx.translate(p.x, p.y);
-    ctx.rotate(angle);
-    var len = p.size * 2.1, wid = p.size * 0.95;
-    var grad = ctx.createLinearGradient(-len / 2, 0, len / 2, 0);
-    grad.addColorStop(0, '#4a3c10');
-    grad.addColorStop(0.55, p.color);
-    grad.addColorStop(1, '#fffceb');
-    ctx.fillStyle = grad;
-    ctx.shadowColor = 'rgba(255,241,190,0.5)';
-    ctx.shadowBlur = 4;
-    ctx.beginPath();
-    ctx.moveTo(-len / 2, 0);
-    ctx.quadraticCurveTo(-len * 0.1, -wid / 2, len / 2, 0);
-    ctx.quadraticCurveTo(-len * 0.1, wid / 2, -len / 2, 0);
-    ctx.closePath();
-    ctx.fill();
-    ctx.restore();
-  }
-
-  // Builds a jittered ring of points around (cx, cy) — the outline of one
-  // organic splash shape, not a circle. Used by drawBlob() below.
-  function blobPoints(cx, cy, radius, count){
-    var pts = [];
-    for(var i = 0; i < count; i++){
-      var angle = (i / count) * Math.PI * 2;
-      var r = radius * (0.68 + Math.random() * 0.55);
-      pts.push({x: cx + Math.cos(angle) * r, y: cy + Math.sin(angle) * r});
-    }
-    return pts;
-  }
-
-  // Traces a smooth closed path through jittered points (quadratic curves
-  // through midpoints) — reads as an irregular splash/puddle outline
-  // rather than a perfect circle.
-  function traceBlobPath(ctx, pts){
-    var len = pts.length;
-    ctx.beginPath();
-    for(var i = 0; i < len; i++){
-      var p0 = pts[i];
-      var p1 = pts[(i + 1) % len];
-      var mx = (p0.x + p1.x) / 2, my = (p0.y + p1.y) / 2;
-      if(i === 0){
-        var pStart = pts[len - 1];
-        var mStart = {x: (pStart.x + p0.x) / 2, y: (pStart.y + p0.y) / 2};
-        ctx.moveTo(mStart.x, mStart.y);
-      }
-      ctx.quadraticCurveTo(p0.x, p0.y, mx, my);
-    }
-    ctx.closePath();
-  }
-
-  // A permanent gold splat — a cluster of irregular, mostly-flat splash
-  // shapes (never perfect circles with full radial sphere-shading, which
-  // reads as a glossy 3D ball rather than splattered liquid gold) with a
-  // faint directional shade for depth and a few small bright glints for
-  // shine. Drawn once onto the never-cleared stuck canvas, so it stays
-  // exactly where it lands for the rest of the loader.
-  function drawSplat(ctx, x, y, radius, color, opts){
-    opts = opts || {};
-    var blobCount = opts.blobs || (3 + Math.floor(Math.random() * 3));
-    var baseAlpha = opts.alpha != null ? opts.alpha : 1;
-    ctx.save();
-    for(var i = 0; i < blobCount; i++){
-      var offX = (Math.random() - 0.5) * radius * 0.9;
-      var offY = (Math.random() - 0.5) * radius * 0.9;
-      var r = radius * (0.5 + Math.random() * 0.55);
-      var bx = x + offX, by = y + offY;
-      var pts = blobPoints(bx, by, r, 8 + Math.floor(Math.random() * 5));
-      ctx.globalAlpha = baseAlpha;
-      traceBlobPath(ctx, pts);
-      ctx.fillStyle = color;
-      ctx.fill();
-      // A faint directional shade (light corner fading to a darker one)
-      // gives the splash a touch of depth without the full sphere-style
-      // falloff a radial gradient from center would create.
-      var shadeAngle = Math.random() * Math.PI * 2;
-      var lx = bx - Math.cos(shadeAngle) * r, ly = by - Math.sin(shadeAngle) * r;
-      var dx = bx + Math.cos(shadeAngle) * r, dy = by + Math.sin(shadeAngle) * r;
-      var shade = ctx.createLinearGradient(lx, ly, dx, dy);
-      shade.addColorStop(0, 'rgba(255,250,225,0.32)');
-      shade.addColorStop(0.5, 'rgba(255,250,225,0)');
-      shade.addColorStop(1, 'rgba(50,38,8,0.3)');
-      ctx.fillStyle = shade;
-      ctx.fill();
-    }
-    // A few small, tight glints scattered across the splat — the
-    // "shiny/reflective" cue — rather than one big soft highlight, which
-    // is what made splats read as spheres.
-    var glints = opts.glints != null ? opts.glints : (1 + Math.floor(Math.random() * 2));
-    for(var g = 0; g < glints; g++){
-      var gx = x + (Math.random() - 0.5) * radius * 1.1;
-      var gy = y + (Math.random() - 0.5) * radius * 1.1;
-      var gr = radius * (0.08 + Math.random() * 0.12);
-      ctx.globalAlpha = baseAlpha * 0.75;
-      var hi = ctx.createRadialGradient(gx, gy, 0, gx, gy, gr);
-      hi.addColorStop(0, 'rgba(255,255,255,0.9)');
-      hi.addColorStop(1, 'rgba(255,255,255,0)');
-      ctx.fillStyle = hi;
-      ctx.beginPath();
-      ctx.arc(gx, gy, gr, 0, Math.PI * 2);
-      ctx.fill();
-    }
-    // Occasionally let a thin drip run down from the splat, reinforcing
-    // the "liquid gold hitting the screen" feel.
-    if(Math.random() < 0.5){
-      var dripLen = radius * (0.6 + Math.random() * 1.4);
-      var dripW = radius * 0.16;
-      ctx.globalAlpha = baseAlpha * 0.9;
-      var dgrad = ctx.createLinearGradient(x, y, x, y + dripLen);
-      dgrad.addColorStop(0, color);
-      dgrad.addColorStop(1, 'rgba(90,74,20,0)');
-      ctx.fillStyle = dgrad;
-      ctx.beginPath();
-      ctx.moveTo(x - dripW / 2, y);
-      ctx.lineTo(x + dripW / 2, y);
-      ctx.lineTo(x + dripW * 0.2, y + dripLen);
-      ctx.lineTo(x - dripW * 0.2, y + dripLen);
-      ctx.closePath();
-      ctx.fill();
-    }
-    ctx.restore();
-  }
-
-  // Moderate-sized splats stamped straight onto the permanent layer, in a
-  // jittered grid covering the whole viewport and staggered over time, so
-  // the screen is guaranteed to read as "almost entirely covered" in gold
-  // by the time #goldFlood takes over — without relying on a few giant
-  // blobs, which read as glossy spheres/planets instead of splattered
-  // gold (see drawSplat for the per-blob highlight treatment that keeps
-  // even these larger stamps looking rough and irregular).
-  function scheduleMegaSplats(cx, cy){
-    megaTimers.forEach(clearTimeout);
-    megaTimers = [];
-    var w = window.innerWidth, h = window.innerHeight;
-    var cols = 7, rows = 5;
-    var cellW = w / cols, cellH = h / rows;
-    // Radius sized so neighboring cells overlap generously (coverage,
-    // not gaps) while staying small enough to read as a splat, not a
-    // sphere filling a quarter of the screen.
-    var cellR = Math.max(cellW, cellH) * 0.62;
-    var spots = [];
-    for(var row = 0; row < rows; row++){
-      for(var col = 0; col < cols; col++){
-        var sx = cellW * (col + 0.5) + (Math.random() - 0.5) * cellW * 0.6;
-        var sy = cellH * (row + 0.5) + (Math.random() - 0.5) * cellH * 0.6;
-        // Distance from the blast center biases timing — outer cells
-        // land a touch later, echoing the outward-traveling explosion.
-        var dist = Math.hypot(sx - cx, sy - cy) / Math.hypot(w / 2, h / 2);
-        spots.push({x: sx, y: sy, dist: dist});
-      }
-    }
-    spots.forEach(function(spot, i){
-      var delay = BURST_DURATION * (0.35 + spot.dist * 0.25) + Math.random() * 260;
-      megaTimers.push(setTimeout(function(){
-        if(!stuckCtx) return;
-        var color = GOLD_SHADES[Math.floor(Math.random() * 3) + 2];
-        drawSplat(stuckCtx, spot.x, spot.y, cellR * (0.8 + Math.random() * 0.35), color, {blobs: 4, glints: 2});
-      }, delay));
-    });
-  }
-
   function explosionFrame(ts){
     if(!burstStart) burstStart = ts;
     var elapsed = ts - burstStart;
@@ -3129,32 +2849,27 @@
     burstCtx.clearRect(0, 0, window.innerWidth, window.innerHeight);
     for(var i = 0; i < burstParticles.length; i++){
       var p = burstParticles[i];
-      if(p.landed) continue;
-      if(t >= p.stickAt){
-        // This particle's flight is over — stamp a permanent, larger
-        // splat where it currently sits (gold "hitting and sticking" to
-        // the screen) and stop drawing it as a moving particle.
-        var splatR = p.size * (p.type === 'spark' ? 3.2 : 2.4);
-        drawSplat(stuckCtx, p.x, p.y, splatR, p.color);
-        p.landed = true;
-        continue;
-      }
       p.vx *= p.drag;
       p.vy *= p.drag;
       p.vy += p.gravity;
       p.x += p.vx;
       p.y += p.vy;
       p.rotation += p.spin;
-      p.size *= p.growth;
-      // Quick rise to full brightness right after launch, then it flies
-      // at full intensity until it lands (no fading away mid-flight —
-      // every particle either is flying brightly or has already stuck).
-      var localLife = Math.min(t / Math.max(p.stickAt, 0.001), 1);
-      var alpha = localLife < 0.1 ? localLife / 0.1 : 1;
-      if(p.type === 'shard'){
+      // Peak brightness early (fast rise), then recede over the rest of
+      // the duration — the "reaches its peak, then smoothly transitions"
+      // beat from the brief, per-particle so the whole burst doesn't cut
+      // off in one visible step.
+      var life = Math.min(Math.max((t - p.lifeOffset) / (1 - p.lifeOffset), 0), 1);
+      var alpha;
+      if(life < 0.12){
+        alpha = life / 0.12;
+      } else {
+        var fade = (life - 0.12) / 0.88;
+        alpha = 1 - fade * fade; // eased recede, not linear
+      }
+      if(alpha <= 0.01) continue;
+      if(p.shard){
         drawShard(burstCtx, p, alpha);
-      } else if(p.type === 'droplet'){
-        drawDroplet(burstCtx, p, alpha);
       } else {
         drawSpark(burstCtx, p, alpha);
       }
@@ -3174,37 +2889,16 @@
   function finishLoad(){
     core.classList.add('fade-out');
     spawnGoldExplosion();
-    if(reduceMotion){
-      // No particles at all under reduced motion — jump straight to the
-      // full gold screen and hold WELCOME steady on top of it.
-      goldFlood.classList.add('show');
-      welcome.classList.add('show');
-      setTimeout(irisReveal, 900);
-      return;
-    }
-    // The gold flood fades in while the splatter is still finishing up,
-    // so any gaps the randomized splats left are seamlessly sealed into
-    // one solid, glossy gold screen rather than a visible second step.
-    setTimeout(function(){
-      goldFlood.classList.add('show');
-    }, BURST_DURATION * 0.78);
-    // WELCOME only starts rising once the screen already reads as fully
-    // gold — never before, per the brief.
-    var welcomeStart = BURST_DURATION * 0.78 + 900;
+    // WELCOME is timed to start fading in once the burst is past its peak
+    // and already receding (not before, and not only after it's fully
+    // gone) so the word visibly emerges through the dissipating gold
+    // rather than appearing on an empty screen after a hard cut.
     setTimeout(function(){
       welcome.classList.add('show');
-    }, welcomeStart);
-    // The slow metallic glint sweeps across the letters once they've had
-    // a moment to fully resolve.
-    setTimeout(function(){
-      welcome.classList.add('shine');
-    }, welcomeStart + 1900);
-    // Hold on the finished WELCOME-on-gold composition for a beat before
-    // handing off into the iris reveal — long enough to build
-    // anticipation, short enough not to drag.
+    }, reduceMotion ? 300 : 700);
     setTimeout(function(){
       irisReveal();
-    }, welcomeStart + 4200);
+    }, reduceMotion ? 1650 : 2350);
   }
 
   // html.mtv-skip-loader means the inline script at the top of <body>
